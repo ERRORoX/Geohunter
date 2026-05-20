@@ -1,0 +1,315 @@
+/**
+ * Внешний слой панели: фон, шапка OSINT, вкладки, скроллбар.
+ * Подключается после layout.css и tools.css на страницах интерфейса.
+ */
+
+/* --- Фон: сетка + частицы --- */
+.osint-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cyber-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.4;
+  background-image:
+    linear-gradient(rgba(0, 255, 136, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.04) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 20%, black 20%, transparent 75%);
+}
+
+.particle {
+  position: absolute;
+  bottom: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  opacity: 0.35;
+  animation: particle-rise var(--duration, 12s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes particle-rise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.5;
+  }
+  92% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateY(-100vh) scale(0.4);
+    opacity: 0;
+  }
+}
+
+/* --- Шапка OSINT --- */
+.osint-header.osint-header,
+header.osint-header {
+  position: relative;
+  z-index: 1;
+}
+
+.osint-header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md) var(--space-lg);
+  padding: var(--space-md) var(--space-xl);
+  max-width: 1600px;
+  margin: 0 auto;
+  position: relative;
+  background: linear-gradient(180deg, rgba(8, 8, 12, 0.92) 0%, rgba(6, 6, 8, 0.75) 100%);
+  border-bottom: 1px solid var(--border);
+}
+
+.scan-line {
+  position: relative;
+  /* overflow: visible — иначе выпадающее меню «Система» обрезается */
+}
+
+.scan-line::before {
+  content: "";
+  position: absolute;
+  left: -40%;
+  top: 0;
+  width: 35%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 255, 136, 0.06),
+    rgba(0, 212, 255, 0.05),
+    transparent
+  );
+  animation: scan-sweep 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes scan-sweep {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(420%);
+    opacity: 0;
+  }
+}
+
+.osint-logo {
+  flex-shrink: 0;
+  color: var(--accent);
+  filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.35));
+}
+
+.osint-logo svg {
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+
+.osint-title {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.osint-title h1 {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.5vw, 1.65rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+}
+
+.osint-title .accent {
+  color: var(--accent);
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.35);
+}
+
+.osint-title .dim {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.osint-title p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  line-height: 1.45;
+  max-width: 52ch;
+}
+
+.header-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.header-badge {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.header-badge.online {
+  border-color: rgba(0, 255, 136, 0.35);
+  color: var(--accent);
+}
+
+.header-badge.ai {
+  border-color: rgba(0, 212, 255, 0.35);
+  color: var(--cyan);
+}
+
+.badge-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.badge-dot.green {
+  background: var(--success);
+  box-shadow: 0 0 8px var(--success);
+}
+
+/* --- Вкладки --- */
+.osint-tabs {
+  border-top: 1px solid rgba(26, 26, 34, 0.85);
+  background: rgba(5, 5, 8, 0.88);
+  backdrop-filter: blur(8px);
+}
+
+.tab-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 2px;
+  padding: var(--space-sm) var(--space-xl);
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.tool-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--text-muted);
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  transition: color var(--transition), border-color var(--transition), background var(--transition),
+    box-shadow var(--transition);
+}
+
+.tool-link:hover {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--accent-soft);
+}
+
+.tool-link.active {
+  color: var(--accent);
+  border-color: rgba(0, 255, 136, 0.45);
+  background: rgba(0, 255, 136, 0.06);
+  box-shadow: 0 0 16px rgba(0, 255, 136, 0.08);
+}
+
+.tab-icon {
+  display: inline-flex;
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+}
+
+.tab-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Область контента --- */
+.osint-body {
+  position: relative;
+  z-index: 0;
+}
+
+.osint-main {
+  padding: var(--space-lg) var(--space-xl);
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.osint-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--bg-input);
+}
+
+.osint-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.osint-scrollbar::-webkit-scrollbar-track {
+  background: var(--bg-input);
+  border-radius: 6px;
+}
+
+.osint-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent), var(--cyan));
+  border-radius: 6px;
+  border: 2px solid var(--bg-input);
+}
+
+.osint-scrollbar::-webkit-scrollbar-thumb:hover {
+  filter: brightness(1.1);
+}
+
+/* Плейсхолдер / пустое состояние */
+.matrix-fade {
+  animation: matrix-fade-in 0.35s ease;
+}
+
+@keyframes matrix-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

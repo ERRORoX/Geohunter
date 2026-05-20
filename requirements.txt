@@ -1,0 +1,18 @@
+# GeoHunter — Python 3.10+
+flask>=3.0,<4
+requests>=2.28,<3
+Pillow>=10,<12
+python-dotenv>=1.0,<2
+flask-cors>=4.0,<6
+pytesseract>=0.3.10
+pyzbar>=0.1.9
+astral>=3.2
+numpy>=2.0,<3
+scipy>=1.11,<2
+reverse-geocoder>=1.5.1
+pydantic>=2.0,<3
+pydantic-settings>=2.0,<3
+flask-limiter>=3.5,<4
+opencv-python-headless>=4.8,<5
+
+
