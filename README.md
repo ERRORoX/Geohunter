@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/banner.png" alt="GeoHunter by ERRORoX" width="100%">
+  <img src="docs/banner.png" alt="GeoHunter — ERRORoX" width="100%">
 </p>
 
 ```text
@@ -9,26 +9,26 @@
 ██║   ██║██╔══╝  ██║   ██║██╔══██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗
 ╚██████╔╝███████╗╚██████╔╝██║  ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║
  ╚═════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
-        [ LOCAL PHOTO OSINT NODE ] :: EXIF // GEO // FORENSICS // SIGINT-LITE
+     [ ЛОКАЛЬНЫЙ ФОТО-OSINT УЗЕЛ ] :: EXIF // ГЕО // КРИМИНАЛИСТИКА // РАЗВЕДКА
 ```
 
 <h1 align="center">GeoHunter</h1>
 
 <p align="center">
   <strong>Локальный фреймворк разбора изображений</strong><br>
-  метаданные · геопривязка · криминалистика · текст · коды · follow-up поиск
+  метаданные · геопривязка · криминалистика · текст · коды · обратный и веб-поиск
 </p>
 
 <p align="center">
   <a href="https://www.instagram.com/_specter_X/"><img src="https://img.shields.io/badge/Instagram-_specter_X-E4405F?style=for-the-badge&logo=instagram&logoColor=white" alt="Instagram @_specter_X"></a>
-  <img src="https://img.shields.io/badge/OP-ERRORoX-00ff88?style=for-the-badge&labelColor=0a0e14" alt="ERRORoX">
-  <img src="https://img.shields.io/badge/stack-Flask%20%7C%20MapLibre%20%7C%20ExifTool-111827?style=for-the-badge&color=00ff88" alt="stack">
-  <img src="https://img.shields.io/badge/license-MIT-00ff88?style=for-the-badge&labelColor=0a0e14" alt="MIT">
+  <img src="https://img.shields.io/badge/автор-ERRORoX-00ff88?style=for-the-badge&labelColor=0a0e14" alt="ERRORoX">
+  <img src="https://img.shields.io/badge/стек-Flask%20%7C%20MapLibre%20%7C%20ExifTool-111827?style=for-the-badge&color=00ff88" alt="стек">
+  <img src="https://img.shields.io/badge/лицензия-MIT-00ff88?style=for-the-badge&labelColor=0a0e14" alt="MIT">
 </p>
 
 ---
 
-## /// BRIEFING
+## /// БРИФИНГ
 
 **GeoHunter** — мой рабочий стенд под фото-OSINT: один снимок → метаданные, координаты, карта, следы монтажа, шум, тени, LSB, лица, OCR, QR и ссылки на обратный поиск.  
 Всё крутится **на вашем хосте** (Flask). Файл в облако для «магического анализа» не уходит.
@@ -38,53 +38,53 @@
 http://127.0.0.1:5050/photo/
 ```
 
-> **OPSEC:** геокод шлёт координаты на Nominatim; карта тянет тайлы из сети. Учитывайте это в чувствительных кейсах.
+> **Операционная безопасность:** геокод отправляет координаты на Nominatim; карта подгружает тайлы из сети. Учитывайте это в чувствительных расследованиях.
 
 ---
 
-## /// VISUAL [FIELD REPORT]
+## /// ВИЗУАЛ · ПОЛЕВОЙ ОТЧЁТ
 
-<p align="center"><b>01 — EXIF / GPS / MAP</b> · точка, адрес, предупреждение о геотеге</p>
+<p align="center"><b>01 — EXIF / GPS / КАРТА</b> · точка, адрес, предупреждение о геотеге</p>
 
 <p align="center">
-  <img src="docs/screenshots/01-exif-gps-map.png" alt="EXIF GPS map" width="48%">
-  <img src="docs/screenshots/02-map-detail.png" alt="Map detail" width="48%">
+  <img src="docs/screenshots/01-exif-gps-map.png" alt="EXIF, GPS и карта" width="48%">
+  <img src="docs/screenshots/02-map-detail.png" alt="Детализация карты" width="48%">
 </p>
 
-<p align="center"><b>02 — METADATA PANEL</b> · адрес, солнце, камера, хэши</p>
+<p align="center"><b>02 — ПАНЕЛЬ МЕТАДАННЫХ</b> · адрес, солнце, камера, хэши</p>
 
 <p align="center">
-  <img src="docs/screenshots/03-metadata.png" alt="Metadata panel" width="78%">
+  <img src="docs/screenshots/03-metadata.png" alt="Панель метаданных" width="78%">
 </p>
 
-<p align="center"><b>03 — FORENSICS SUITE</b> · ELA · NOISE · SHADOWS · LSB</p>
+<p align="center"><b>03 — КРИМИНАЛИСТИКА</b> · ELA · шум · тени · LSB</p>
 
 <p align="center">
-  <img src="docs/screenshots/04-forensics.png" alt="Forensics" width="78%">
+  <img src="docs/screenshots/04-forensics.png" alt="Криминалистика" width="78%">
 </p>
 
 ---
 
-## /// MODULE MANIFEST
+## /// РЕЕСТР МОДУЛЕЙ
 
-| MOD | Назначение | Стек |
-|-----|------------|------|
+| Модуль | Назначение | Стек |
+|--------|------------|------|
 | `EXIF` | GPS, WGS84, геокод, карта, ExifTool, ссылки на карты | exiftool, Nominatim, MapLibre |
-| `ELA` | Error Level Analysis — зоны пересохранения / ретуши | Pillow |
-| `NOISE` | карта шума — неоднородность по кадру | NumPy, SciPy |
-| `SHADOW` | азимут солнца, оценка широты по тени + EXIF-время | Astral |
-| `LSB` | младшие биты, намёк на стеганографию | Pillow |
-| `FACE` | детекция лиц | OpenCV |
+| `ELA` | анализ уровня ошибок — зоны пересохранения и ретуши | Pillow |
+| `ШУМ` | карта шума, неоднородность по кадру | NumPy, SciPy |
+| `ТЕНИ` | азимут солнца, оценка широты по тени и времени из EXIF | Astral |
+| `LSB` | младшие биты, признаки стеганографии | Pillow |
+| `ЛИЦА` | детекция лиц | OpenCV |
 | `OCR` | текст, email, телефоны, URL | Tesseract rus+eng |
-| `QR` | QR / штрихкоды | pyzbar |
-| `REV` | Lens, Яндекс, Bing, TinEye — ручной follow-up | браузер |
-| `SEARCH` | готовые запросы из EXIF/OCR | браузер |
+| `QR` | QR и штрихкоды | pyzbar |
+| `ОБРАТНЫЙ` | Lens, Яндекс, Bing, TinEye — ручная проверка | браузер |
+| `ПОИСК` | готовые запросы из EXIF и OCR | браузер |
 
-**Сервис:** экспорт MD/JSON · JPEG без EXIF · полный дамп тегов ExifTool.
+**Дополнительно:** экспорт MD/JSON · JPEG без EXIF · полный дамп тегов ExifTool.
 
 ---
 
-## /// DEPLOY [LOCAL NODE]
+## /// РАЗВЁРТЫВАНИЕ · ЛОКАЛЬНЫЙ УЗЕЛ
 
 **Требования:** Python 3.10+ · Linux / macOS / WSL
 
@@ -102,7 +102,7 @@ pip install -r requirements.txt
 python3 run.py
 ```
 
-Проверка бинарников:
+Проверка утилит:
 
 ```bash
 exiftool -ver && tesseract --version
@@ -118,28 +118,28 @@ exiftool -ver && tesseract --version
 
 ---
 
-## /// OPERATOR WORKFLOW
+## /// РАБОЧИЙ ЦИКЛ ОПЕРАТОРА
 
-1. **INGEST** — файл или URL в `/photo/`.
-2. **RUN** — параллельный прогон всех модулей.
-3. **TRIAGE** — EXIF (карта + адрес), forensics, OCR/QR, search links.
-4. **EXPORT** — MD/JSON из шапки после прогона.
-5. **SANITIZE** — «Удалить метаданные» → чистая копия JPEG.
+1. **ЗАГРУЗКА** — файл или URL в `/photo/`.
+2. **ЗАПУСК** — параллельный прогон всех модулей.
+3. **РАЗБОР** — EXIF (карта и адрес), криминалистика, OCR/QR, ссылки на поиск.
+4. **ЭКСПОРТ** — MD/JSON из шапки после прогона.
+5. **ОЧИСТКА** — «Удалить метаданные» → копия JPEG без EXIF.
 
 **Заметки по полю:**
 
-- GPS часто срезан мессенджерами — нужен **оригинал с камеры**.
-- Белая карта → нет сети / блок CDN MapLibre / OpenFreeMap.
-- 413 → поднять `MAX_UPLOAD_MB`.
+- GPS часто вырезают мессенджеры — нужен **оригинал с камеры**.
+- Белая карта → нет сети или блок CDN MapLibre / OpenFreeMap.
+- Ошибка 413 → увеличить `MAX_UPLOAD_MB`.
 
 ---
 
-## /// API [HEADLESS]
+## /// API · БЕЗ ИНТЕРФЕЙСА
 
 `POST` · JSON · поле `imageBase64`
 
 ```
-/api/exif              — метаданные + GPS + геокод
+/api/exif              — метаданные, GPS, геокод
 /api/exif/strip        — JPEG без EXIF
 /api/exif/exiftool/json
 /api/forensics/ela | noise | stego | faces | shadow-solve
@@ -151,72 +151,72 @@ exiftool -ver && tesseract --version
 ```bash
 curl -s -X POST http://127.0.0.1:5050/api/exif \
   -H "Content-Type: application/json" \
-  -d "{\"imageBase64\":\"$(base64 -w0 target.jpg)\",\"exiftool\":true,\"geocode\":true}"
+  -d "{\"imageBase64\":\"$(base64 -w0 photo.jpg)\",\"exiftool\":true,\"geocode\":true}"
 ```
 
-Полный конфиг: `backend/config.py`.
+Полный список настроек: `backend/config.py`.
 
 ---
 
-## /// TREE
+## /// СТРУКТУРА ПРОЕКТА
 
 ```
 run.py
-backend/           # routes, services, tools/
-static/photo/      # operator UI
+backend/           — маршруты, сервисы, инструменты
+static/photo/      — веб-интерфейс
 tools/exif_inspector/
-docs/              # banner.png, screenshots/
-LICENSE            # MIT © ERRORoX
+docs/              — баннер и скриншоты
+LICENSE            — MIT © ERRORoX
 ```
 
-Расширение: `backend/tools/` → `registry.py` → `routes.py` → `tools-config.js`.
+Новый модуль: `backend/tools/` → `registry.py` → `routes.py` → `tools-config.js`.
 
 ---
 
-## /// TROUBLESHOOT
+## /// СБОИ И РЕШЕНИЯ
 
-| SYMPTOM | FIX |
-|---------|-----|
-| no exiftool | `apt install libimage-exiftool-perl` |
-| OCR null | `tesseract-ocr-rus` |
-| QR dead | `libzbar0` |
-| FACE off | `pip install opencv-python-headless` |
-| map blank | F12 → network; check openfreemap + unpkg |
-| no GPS pin | EXIF без координат |
+| Симптом | Решение |
+|---------|---------|
+| нет exiftool | `apt install libimage-exiftool-perl` |
+| пустой OCR | `tesseract-ocr-rus` |
+| QR не читается | `libzbar0` |
+| модуль «Лица» недоступен | `pip install opencv-python-headless` |
+| белая карта | F12 → сеть; проверить openfreemap и unpkg |
+| нет точки на карте | в EXIF нет координат |
 
-Стартовый лог: `env_check.py`.
+При старте сервер пишет в лог, чего не хватает (`env_check.py`).
 
 ---
 
-## /// OPERATOR
+## /// ОПЕРАТОР
 
 <table>
   <tr>
-    <td><b>CALLSIGN</b></td>
+    <td><b>Позывной</b></td>
     <td><b>ERRORoX</b></td>
   </tr>
   <tr>
-    <td><b>COMMS</b></td>
+    <td><b>Связь</b></td>
     <td>
       <a href="https://www.instagram.com/_specter_X/">Instagram @_specter_X</a>
     </td>
   </tr>
   <tr>
-    <td><b>ROLE</b></td>
-    <td>author · maintainer · GeoHunter</td>
+    <td><b>Роль</b></td>
+    <td>автор · сопровождение · GeoHunter</td>
   </tr>
 </table>
 
-Баги и идеи — issues или DM. В репорте: ОС, `python3 --version`, `exiftool -ver`, stderr + F12.
+Баги и идеи — issues в репозитории или личные сообщения. В отчёте укажите: ОС, `python3 --version`, `exiftool -ver`, текст ошибки из терминала и консоли браузера (F12).
 
 ---
 
-## /// LEGAL
+## /// ПРАВО И ОТВЕТСТВЕННОСТЬ
 
-**[MIT License](LICENSE)** — © 2026 **ERRORoX**
+**[Лицензия MIT](LICENSE)** — © 2026 **ERRORoX**
 
-Анализируйте только то, на что есть право. Не светите инстанс в open internet без auth/TLS/ротации `SECRET_KEY`. Вывод модулей — **гипотеза для проверки**, не вердикт.
+Анализируйте только те материалы, на которые у вас есть право. Не выставляйте сервер в открытый интернет без авторизации, HTTPS и смены `SECRET_KEY`. Вывод модулей — **гипотеза для проверки**, не готовый вердикт.
 
 ```text
-[ EOF ] :: stay sharp :: ERRORoX :: @_specter_X
+[ КОНЕЦ ] :: на связи :: ERRORoX :: @_specter_X
 ```
