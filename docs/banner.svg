@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-label="GeoHunter by ERRORoX">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#040508"/>
+      <stop offset="45%" stop-color="#0a0e14"/>
+      <stop offset="100%" stop-color="#060a10"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#00ff88" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#00ff88" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#00ff88" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00ff88"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#00ff88" stroke-width="0.35" opacity="0.12"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="320" fill="url(#bg)"/>
+  <rect width="1200" height="320" fill="url(#grid)"/>
+  <rect x="0" y="156" width="1200" height="2" fill="url(#glow)"/>
+
+  <!-- scan line -->
+  <rect x="0" y="0" width="1200" height="3" fill="#00ff88" opacity="0.25"/>
+  <rect x="0" y="317" width="1200" height="3" fill="#00ff88" opacity="0.15"/>
+
+  <!-- corner brackets -->
+  <path d="M 32 48 L 32 88 L 72 88" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.55"/>
+  <path d="M 1168 48 L 1168 88 L 1128 88" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.55"/>
+  <path d="M 32 272 L 32 232 L 72 232" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.55"/>
+  <path d="M 1168 272 L 1168 232 L 1128 232" fill="none" stroke="#00ff88" stroke-width="2" opacity="0.55"/>
+
+  <!-- logo mark -->
+  <circle cx="108" cy="160" r="44" fill="none" stroke="url(#accent)" stroke-width="2.5" opacity="0.9"/>
+  <circle cx="108" cy="160" r="28" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.35"/>
+  <text x="108" y="172" text-anchor="middle" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="42" font-weight="700" fill="#00ff88">G</text>
+
+  <!-- title -->
+  <text x="178" y="118" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="22" fill="#6b7280" letter-spacing="6">GEOHUNTER</text>
+  <text x="178" y="178" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="56" font-weight="700" fill="url(#accent)" filter="url(#soft)">ERRORoX</text>
+  <text x="180" y="218" font-family="ui-sans-serif, system-ui, Segoe UI, sans-serif" font-size="18" fill="#9ca3af">OSINT · D>B> · <5B040==K5 · :@8<8=0;8AB8:0</text>
+
+  <!-- right tag -->
+  <rect x="860" y="118" width="300" height="84" rx="10" fill="#0d1117" stroke="#00ff88" stroke-width="1" opacity="0.85"/>
+  <text x="1010" y="152" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#00ff88" opacity="0.8">EXIF · GPS · ELA · OCR · QR</text>
+  <text x="1010" y="178" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#6b7280">Flask · MapLibre · ExifTool</text>
+  <text x="1010" y="198" text-anchor="middle" font-family="ui-sans-serif, sans-serif" font-size="12" fill="#4b5563">;>:0;L=K9 A5@25@</text>
+</svg>
