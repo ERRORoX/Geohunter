@@ -122,13 +122,29 @@ function formatAddressRows(addr) {
   return rows ? `<dl class="exif-addr-dl">${rows}</dl>` : '';
 }
 
+/** Блок карты как в GeoHunter/static/photo/js/photo.js → renderExifGpsMapBlock */
 function renderLocationMapBlock(gps) {
   const coords = parseGpsCoords(gps);
   if (!coords) return '';
   const { lat, lon } = coords;
+  const lat6 = lat.toFixed(6);
+  const lon6 = lon.toFixed(6);
   const mapId = getExifMapContainerId();
-  return `<div class="location-map-wrap">
-    <div id="${mapId}" class="gps-map gps-map-inline photo-map--exif location-map"></div>
+  const gMaps = gps.googleMapsUrl || `https://www.google.com/maps?q=${lat},${lon}`;
+  const yMaps = gps.yandexMapsUrl || `https://yandex.ru/maps/?pt=${lon},${lat}&z=15&l=map`;
+  const osm =
+    gps.openStreetMapUrl ||
+    `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=15/${lat}/${lon}`;
+  return `<div class="gps-box gps-box-map-slot">
+    <div class="gps-coord-row"><span class="gps-coord-key">WGS84</span><span class="gps-coord-val">${lat6}, ${lon6}</span></div>
+    <div class="gps-links">
+      <a href="${esc(gMaps)}" target="_blank" rel="noopener">${IC.ext} Google</a>
+      <a href="${esc(yMaps)}" target="_blank" rel="noopener">${IC.ext} Яндекс</a>
+      <a href="${esc(osm)}" target="_blank" rel="noopener">${IC.ext} OSM</a>
+    </div>
+    <div class="gps-map photo-cyber-map photo-map--exif" aria-label="Карта">
+      <div id="${mapId}" class="photo-leaflet-root"></div>
+    </div>
     <div class="tag-list location-map-actions">
       <button type="button" class="upload-toggle" data-gh="open-full-map" data-lat="${lat}" data-lon="${lon}">Карта на весь экран</button>
     </div>

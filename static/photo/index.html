@@ -67,8 +67,10 @@
     </div>
 
     <div id="map-container" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:#060608">
-      <button type="button" onclick="document.getElementById('map-container').style.display='none'" style="position:absolute;top:20px;right:20px;z-index:10000;padding:10px 20px;background:#ff4444;color:white;border:none;border-radius:5px;cursor:pointer">Закрыть</button>
-      <div id="photo-leaflet-exif" style="width:100%;height:100%"></div>
+      <button type="button" id="btn-close-full-map" style="position:absolute;top:20px;right:20px;z-index:10000;padding:10px 20px;background:#ff4444;color:white;border:none;border-radius:5px;cursor:pointer">Закрыть</button>
+      <div class="gps-map photo-cyber-map photo-map--exif" style="width:100%;height:100%">
+        <div id="photo-leaflet-fullscreen" class="photo-leaflet-root"></div>
+      </div>
     </div>
 
     <script defer src="/js/header-env.js"></script>

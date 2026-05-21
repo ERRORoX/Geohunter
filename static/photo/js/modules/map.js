@@ -3,14 +3,19 @@ import { parseGpsCoords } from './utils.js';
 let photoMapExif = null;
 let photoMapGeo = null;
 let photoMapShadow = null;
+let photoMapFullscreen = null;
 let photoMarkerExif = null;
 let photoMarkerGeo = null;
+let photoMarkerFullscreen = null;
 
 const _maplibreWaiters = [];
 let _maplibreInjecting = false;
-const PHOTO_MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 
-let _exifMapKey = '';
+/** Как в GeoHunter/static/photo/js/photo.js — Liberty + затемнение канваса в photo.css */
+const PHOTO_MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
+const EXIF_MAP_ID = 'photo-leaflet-exif';
+const FULLSCREEN_MAP_ID = 'photo-leaflet-fullscreen';
+
 let _shadowMapKey = '';
 
 export function destroyPhotoMaps() {
@@ -19,8 +24,15 @@ export function destroyPhotoMaps() {
   if (photoMapExif) { try { photoMapExif.remove(); } catch (_) {} photoMapExif = null; }
   if (photoMapGeo) { try { photoMapGeo.remove(); } catch (_) {} photoMapGeo = null; }
   if (photoMapShadow) { try { photoMapShadow.remove(); } catch (_) {} photoMapShadow = null; }
-  _exifMapKey = '';
+  if (photoMarkerFullscreen) { try { photoMarkerFullscreen.remove(); } catch (_) {} photoMarkerFullscreen = null; }
+  if (photoMapFullscreen) { try { photoMapFullscreen.remove(); } catch (_) {} photoMapFullscreen = null; }
   _shadowMapKey = '';
+}
+
+/** Сброс inline-карты EXIF при частичной перерисовке карточки. */
+export function resetExifInlineMap() {
+  if (photoMarkerExif) { try { photoMarkerExif.remove(); } catch (_) {} photoMarkerExif = null; }
+  if (photoMapExif) { try { photoMapExif.remove(); } catch (_) {} photoMapExif = null; }
 }
 
 function loadMapLibre(cb) {
@@ -54,19 +66,24 @@ function pinEl() {
   const wrap = document.createElement('div');
   wrap.className = 'photo-map-pin';
   wrap.setAttribute('aria-hidden', 'true');
-  wrap.innerHTML = '<span class="photo-map-pin-core"></span><span class="photo-map-pin-pulse"></span><span class="photo-map-pin-ring"></span>';
+  wrap.innerHTML =
+    '<span class="photo-map-pin-core"></span><span class="photo-map-pin-pulse"></span><span class="photo-map-pin-ring"></span>';
   return wrap;
 }
 
+/** Тот же mount, что mountPhotoCyberMap в эталонном GeoHunter. */
 export function mountPhotoMap(containerId, lat, lon, slot = 'exif') {
   loadMapLibre(() => {
     const el = document.getElementById(containerId);
     if (!el || typeof maplibregl === 'undefined') return;
-    const prevMap = slot === 'geo' ? photoMapGeo : photoMapExif;
-    const prevMarker = slot === 'geo' ? photoMarkerGeo : photoMarkerExif;
+    const prevMap =
+      slot === 'geo' ? photoMapGeo : slot === 'fullscreen' ? photoMapFullscreen : photoMapExif;
+    const prevMarker =
+      slot === 'geo' ? photoMarkerGeo : slot === 'fullscreen' ? photoMarkerFullscreen : photoMarkerExif;
     if (prevMarker) { try { prevMarker.remove(); } catch (_) {} }
     if (prevMap) { try { prevMap.remove(); } catch (_) {} }
     if (slot === 'geo') { photoMapGeo = null; photoMarkerGeo = null; }
+    else if (slot === 'fullscreen') { photoMapFullscreen = null; photoMarkerFullscreen = null; }
     else { photoMapExif = null; photoMarkerExif = null; }
 
     const map = new maplibregl.Map({
@@ -84,72 +101,58 @@ export function mountPhotoMap(containerId, lat, lon, slot = 'exif') {
     map.addControl(new maplibregl.FullscreenControl({ container: el }), 'top-right');
 
     if (slot === 'geo') photoMapGeo = map;
+    else if (slot === 'fullscreen') photoMapFullscreen = map;
     else photoMapExif = map;
 
     map.once('load', () => {
-      const active = slot === 'geo' ? photoMapGeo : photoMapExif;
+      const active =
+        slot === 'geo' ? photoMapGeo : slot === 'fullscreen' ? photoMapFullscreen : photoMapExif;
       if (active !== map) return;
       const marker = new maplibregl.Marker({ element: pinEl(), anchor: 'center' })
         .setLngLat([lon, lat])
         .addTo(map);
       if (slot === 'geo') photoMarkerGeo = marker;
+      else if (slot === 'fullscreen') photoMarkerFullscreen = marker;
       else photoMarkerExif = marker;
       try { map.resize(); } catch (_) {}
     });
-    map.on('error', (e) => {
-      if (e?.error?.message) console.warn('Map tile error:', e.error.message);
-    });
+
     requestAnimationFrame(() => { try { map.resize(); } catch (_) {} });
     setTimeout(() => { try { map.resize(); } catch (_) {} }, 280);
   });
 }
 
-export function openFullscreenMap(lat, lon) {
-  const box = document.getElementById('map-container');
-  if (box) box.style.display = 'block';
-  mountPhotoMap('photo-leaflet-exif', lat, lon, 'exif');
+/** Как initPhotoCyberMaps() в эталонном GeoHunter. */
+export function initPhotoCyberMaps(exifResult) {
+  const gps = exifResult?.gps;
+  const coords = parseGpsCoords(gps);
+  if (!coords) return;
+  const el = document.getElementById(EXIF_MAP_ID);
+  if (!el || !el.isConnected) return;
+  mountPhotoMap(EXIF_MAP_ID, coords.lat, coords.lon, 'exif');
 }
 
-const EXIF_MAP_ID = 'gh-exif-inline-map';
-
-/** Стабильный id карты в карточке EXIF (переживает перерисовку UI). */
 export function getExifMapContainerId() {
   return EXIF_MAP_ID;
 }
 
+/** @deprecated используйте initPhotoCyberMaps */
 export function remountExifMapFromState(exifResult) {
-  const gps = exifResult?.gps;
-  if (!gps) return;
-  const coords = parseGpsCoords(gps);
-  if (!coords) return;
-  const { lat, lon } = coords;
-  const key = `${lat.toFixed(6)},${lon.toFixed(6)}`;
-  const el = document.getElementById(EXIF_MAP_ID);
-  if (!el) return;
+  initPhotoCyberMaps(exifResult);
+}
 
-  let needMount = true;
-  if (photoMapExif) {
-    try {
-      if (photoMapExif.getContainer() === el && el.isConnected) needMount = false;
-      else {
-        photoMapExif.remove();
-        photoMapExif = null;
-        photoMarkerExif = null;
-      }
-    } catch {
-      photoMapExif = null;
-      photoMarkerExif = null;
-    }
-  }
-  if (!needMount && key === _exifMapKey) return;
-  _exifMapKey = key;
+export function openFullscreenMap(lat, lon) {
+  const box = document.getElementById('map-container');
+  if (box) box.style.display = 'block';
+  mountPhotoMap(FULLSCREEN_MAP_ID, lat, lon, 'fullscreen');
+}
 
-  const run = () => {
-    const box = document.getElementById(EXIF_MAP_ID);
-    if (!box) return;
-    mountPhotoMap(EXIF_MAP_ID, lat, lon, 'exif');
-  };
-  requestAnimationFrame(() => setTimeout(run, 150));
+export function closeFullscreenMap(exifResult) {
+  const box = document.getElementById('map-container');
+  if (box) box.style.display = 'none';
+  if (photoMarkerFullscreen) { try { photoMarkerFullscreen.remove(); } catch (_) {} photoMarkerFullscreen = null; }
+  if (photoMapFullscreen) { try { photoMapFullscreen.remove(); } catch (_) {} photoMapFullscreen = null; }
+  initPhotoCyberMaps(exifResult);
 }
 
 const SHADOW_MAP_ID = 'gh-shadow-locus-map';
@@ -187,9 +190,7 @@ export function mountShadowLocusMap(containerId, geojson) {
     const el = document.getElementById(containerId);
     if (!el || typeof maplibregl === 'undefined') return;
     if (photoMapShadow) {
-      try {
-        photoMapShadow.remove();
-      } catch (_) {}
+      try { photoMapShadow.remove(); } catch (_) {}
       photoMapShadow = null;
     }
 
@@ -229,24 +230,12 @@ export function mountShadowLocusMap(containerId, geojson) {
       });
       const b = boundsFromGeoJson(geojson);
       if (b) {
-        try {
-          map.fitBounds(b, { padding: 36, maxZoom: 4, duration: 0 });
-        } catch (_) {}
+        try { map.fitBounds(b, { padding: 36, maxZoom: 4, duration: 0 }); } catch (_) {}
       }
-      try {
-        map.resize();
-      } catch (_) {}
+      try { map.resize(); } catch (_) {}
     });
-    requestAnimationFrame(() => {
-      try {
-        map.resize();
-      } catch (_) {}
-    });
-    setTimeout(() => {
-      try {
-        map.resize();
-      } catch (_) {}
-    }, 280);
+    requestAnimationFrame(() => { try { map.resize(); } catch (_) {} });
+    setTimeout(() => { try { map.resize(); } catch (_) {} }, 280);
   });
 }
 
@@ -254,11 +243,7 @@ export function remountShadowMapFromState(shadowResult) {
   const geojson = shadowResult?.geojson;
   if (!geojson) return;
   let key = '';
-  try {
-    key = JSON.stringify(geojson);
-  } catch {
-    key = String(Date.now());
-  }
+  try { key = JSON.stringify(geojson); } catch { key = String(Date.now()); }
   if (key === _shadowMapKey && photoMapShadow) return;
   _shadowMapKey = key;
   const run = () => {
@@ -268,4 +253,3 @@ export function remountShadowMapFromState(shadowResult) {
   };
   requestAnimationFrame(() => setTimeout(run, 120));
 }
-

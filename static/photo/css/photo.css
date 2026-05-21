@@ -46,7 +46,7 @@ a:hover{text-decoration:underline}
 
 /* Upload */
 .upload-section{border-bottom:1px solid var(--border);padding:16px 0}
-.upload-inner{max-width:1100px;margin:0 auto;padding:0 var(--space-xl)}
+.upload-inner{max-width:1100px;margin:0 auto;padding:0 16px}
 .upload-area{max-width:500px;margin:0 auto;border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;border:1px dashed rgba(255,255,255,0.1);background:rgba(255,255,255,0.01)}
 .upload-area:hover{border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.02)}
 .upload-area.dragging{border-color:rgba(16,185,129,0.4);border-style:solid;background:rgba(16,185,129,0.04)}
@@ -81,7 +81,7 @@ a:hover{text-decoration:underline}
 .progress-text{display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--text4)}
 
 /* Main */
-.main{flex:1;max-width:1100px;margin:0 auto;width:100%;padding:var(--space-lg) var(--space-xl) 40px}
+.main{flex:1;max-width:1100px;margin:0 auto;width:100%;padding:20px 16px 40px}
 
 /* Tool cards grid */
 .tools-grid{display:grid;grid-template-columns:1fr;gap:6px}
@@ -98,8 +98,6 @@ a:hover{text-decoration:underline}
 
 /* Tool card */
 .tool-card{border-radius:10px;overflow:hidden;transition:all 0.2s}
-.tool-card.warn{border-color:rgba(245,158,11,0.25)}
-.location-no-gps{margin:0 0 10px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--text3);font-size:11px}
 .tool-card.running{border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.02)}
 .tool-card.done{border:1px solid var(--border);background:rgba(255,255,255,0.02)}
 .tool-card.error{border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.02)}
@@ -113,7 +111,6 @@ a:hover{text-decoration:underline}
 .tool-icon.idle{background:rgba(255,255,255,0.04)}
 .tool-icon svg{width:12px;height:12px;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
 .tool-name{flex:1;min-width:0;font-size:12px;font-weight:500;color:var(--text2)}
-.tool-summary{flex-shrink:0;font-size:10px;font-family:ui-monospace,monospace;color:var(--text3);letter-spacing:0.02em;white-space:nowrap}
 .tool-status{font-size:10px;color:var(--amber);animation:pulse 1.5s infinite}
 .tool-actions{display:flex;gap:2px}
 .tool-btn{width:20px;height:20px;border-radius:4px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:all 0.15s}
@@ -130,8 +127,6 @@ a:hover{text-decoration:underline}
 .exif-side-by-side .exif-col{min-width:0}
 .location-section{margin-top:4px}
 .location-section-title{margin:0 0 10px!important}
-.location-map-wrap{margin-bottom:12px}
-.location-map{height:300px;min-height:280px;margin-top:0!important}
 .location-map-actions{margin-top:8px}
 .location-split{margin-top:0}
 .gps-box--col{margin-top:0}
@@ -189,11 +184,11 @@ a:hover{text-decoration:underline}
 .gps-links a{font-size:10px;color:var(--emerald);display:flex;align-items:center;gap:3px}
 .gps-links a:hover{text-decoration:none;opacity:0.8}
 .gps-links svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-/* Карта: MapLibre + OpenFreeMap Liberty (как Grabcam session), затемнение канваса — как в tools/grabcam base.css */
+/* Карта: MapLibre + OpenFreeMap Liberty — как GeoHunter/static/photo/css/photo.css */
 .gps-map{border-radius:12px;margin-top:8px;overflow:hidden;border:1px solid rgba(0,255,136,0.18);box-shadow:0 0 0 1px rgba(0,0,0,0.4),0 8px 32px rgba(0,255,136,0.08),inset 0 0 48px rgba(0,0,0,0.45);position:relative}
-.gps-map-inline,.gps-map .maplibregl-map{min-height:240px;width:100%}
-.gps-map-inline .maplibregl-canvas{width:100%!important;height:100%!important}
 .gps-map::after{content:"";pointer-events:none;position:absolute;inset:0;border-radius:12px;z-index:500;box-shadow:inset 0 0 60px rgba(0,0,0,0.55),inset 0 0 0 1px rgba(0,255,136,0.06)}
+#map-container .gps-map::after{z-index:2}
+#map-container .photo-leaflet-root{height:100%;min-height:100vh;width:100%}
 .geo-box .gps-map{border-color:rgba(251,113,133,0.22);box-shadow:0 0 0 1px rgba(0,0,0,0.4),0 8px 28px rgba(251,113,133,0.1),inset 0 0 48px rgba(0,0,0,0.45)}
 .geo-box .gps-map::after{box-shadow:inset 0 0 60px rgba(0,0,0,0.55),inset 0 0 0 1px rgba(251,113,133,0.08)}
 .photo-map--exif{--photo-map-acc:#00ff88;--photo-map-acc-dim:rgba(0,255,136,0.45);--photo-map-acc-glow:rgba(0,255,136,0.35)}
@@ -298,7 +293,6 @@ a:hover{text-decoration:underline}
 
 /* Overview cards */
 .overview-grid{display:grid;grid-template-columns:1fr;gap:12px}
-.overview-cat-hint{font-size:9px;line-height:1.4;color:var(--text4);margin:0 0 8px;padding:0 2px}
 @media(min-width:640px){.overview-grid{grid-template-columns:1fr 1fr}}
 @media(min-width:1024px){.overview-grid{grid-template-columns:1fr 1fr 1fr}}
 .overview-card{border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,0.01);padding:14px}
@@ -310,7 +304,6 @@ a:hover{text-decoration:underline}
 .overview-item .oi-icon svg{width:14px;height:14px;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
 .overview-item .oi-name{font-size:11px;color:var(--text2)}
 .overview-item .oi-desc{font-size:9px;color:var(--text4)}
-
 /* No-GPS */
 .no-gps{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text4);margin-top:6px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08)}
 .no-gps svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -350,6 +343,7 @@ a:hover{text-decoration:underline}
 
 /* 1. Карточки — hover без сдвига (иначе горизонтальный скролл) */
 .tool-card:hover {
+  transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(0,0,0,0.35);
   border-color: rgba(255, 255, 255, 0.12);
 }
@@ -458,4 +452,14 @@ html:has(.photo-shell) body {
   max-width: 38%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Отступы и ширина контента как в GeoHunter/static/photo/css/photo.css (16px по бокам) */
+.photo-shell .main.osint-main {
+  padding: 20px 16px 40px;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  box-sizing: border-box;
 }

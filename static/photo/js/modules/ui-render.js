@@ -3,7 +3,12 @@ import { TOOLS, CATEGORIES } from './tools-config.js';
 import { state, hasImg } from './state.js';
 import { renderToolContent, getToolCardSummary } from './tool-render.js';
 import { esc } from './utils.js';
-import { remountExifMapFromState, remountShadowMapFromState } from './map.js';
+import {
+  destroyPhotoMaps,
+  initPhotoCyberMaps,
+  remountShadowMapFromState,
+  resetExifInlineMap,
+} from './map.js';
 
 let _renderRaf = 0;
 let _uploadPreviewMounted = false;
@@ -218,6 +223,7 @@ function upsertToolCard(toolId) {
   const html = renderCard(tool);
   const existing = document.querySelector(`[data-tool-id="${toolId}"]`);
   if (existing) {
+    if (toolId === 'exif') resetExifInlineMap();
     if (html) existing.outerHTML = html;
     else existing.remove();
     return true;
@@ -228,6 +234,8 @@ function upsertToolCard(toolId) {
 function renderAllNow() {
   const opts = _pendingRender;
   _pendingRender = { light: false, tools: null, maps: false };
+
+  if (!opts.light) destroyPhotoMaps();
 
   renderHeader();
   if (!state.imgSrc) {
@@ -253,9 +261,12 @@ function renderAllNow() {
     renderMain();
   }
 
-  if (opts.maps || !opts.light) {
-    remountExifMapFromState(state.results.exif);
-    if (state.shadowMapOpen) remountShadowMapFromState(state.results.shadows);
+  const touchedExif = toolIds?.includes('exif');
+  if (opts.maps || touchedExif || !opts.light) {
+    queueMicrotask(() => initPhotoCyberMaps(state.results.exif));
+  }
+  if (state.shadowMapOpen && (opts.maps || toolIds?.includes('shadows') || !opts.light)) {
+    queueMicrotask(() => remountShadowMapFromState(state.results.shadows));
   }
 }
 

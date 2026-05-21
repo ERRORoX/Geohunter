@@ -78,7 +78,7 @@ export async function loadExiftoolFull() {
   } catch (e) {
     state.exiftoolFullErr = e.message || String(e);
     state.exiftoolFullLoading = false;
-    renderFn({ tools: ['exif'] });
+    renderFn({ tools: ['exif'], maps: true });
     return null;
   }
 }

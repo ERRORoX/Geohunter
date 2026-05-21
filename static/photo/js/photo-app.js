@@ -3,7 +3,13 @@
  */
 import { API } from './modules/api.js';
 import { state, resetAnalysis, hasImg } from './modules/state.js';
-import { destroyPhotoMaps, openFullscreenMap, remountShadowMapFromState } from './modules/map.js';
+import {
+  closeFullscreenMap,
+  destroyPhotoMaps,
+  openFullscreenMap,
+  initPhotoCyberMaps,
+  remountShadowMapFromState,
+} from './modules/map.js';
 import {
   setRender,
   runAllTools,
@@ -175,6 +181,9 @@ async function handleGhAction(action, el) {
         if (state.collapsedSet.has(id)) state.collapsedSet.delete(id);
         else state.collapsedSet.add(id);
         renderAll();
+        if (id === 'exif' && state.results.exif) {
+          queueMicrotask(() => initPhotoCyberMaps(state.results.exif));
+        }
       }
       break;
     }
@@ -241,6 +250,10 @@ function bindEvents() {
   document.getElementById('btnLoadUrl')?.addEventListener('click', (e) => {
     e.preventDefault();
     loadFromUrl();
+  });
+
+  document.getElementById('btn-close-full-map')?.addEventListener('click', () => {
+    closeFullscreenMap(state.results.exif);
   });
 }
 
