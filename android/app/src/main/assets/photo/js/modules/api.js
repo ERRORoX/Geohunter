@@ -75,3 +75,26 @@ export async function postJsonAllowFail(path, body) {
 }
 
 export { API };
+
+/** Сохраняет файл в системную папку Downloads/GeoHunter на Android. */
+export function saveNativeFile(fileName, mimeType, base64) {
+  return new Promise((resolve, reject) => {
+    const bridge = window.GeoHunterNative;
+    if (!bridge || typeof bridge.saveBase64 !== 'function') {
+      reject(new Error('Нативное сохранение файлов недоступно.'));
+      return;
+    }
+    const id = `gh-save-${++nativeRequestSequence}`;
+    nativePending.set(id, {
+      rejectOnFailure: true,
+      resolve,
+      reject,
+    });
+    try {
+      bridge.saveBase64(fileName, mimeType, base64, id);
+    } catch (error) {
+      nativePending.delete(id);
+      reject(error);
+    }
+  });
+}

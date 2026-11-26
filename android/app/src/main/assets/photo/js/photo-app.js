@@ -1,7 +1,7 @@
 /**
  * GeoHunter — точка входа раздела «Фото» (ES modules).
  */
-import { API } from './modules/api.js';
+import { API, postJson, saveNativeFile } from './modules/api.js';
 import { state, resetAnalysis, hasImg } from './modules/state.js';
 import {
   closeFullscreenMap,
@@ -21,6 +21,24 @@ import { renderAll, scheduleRender } from './modules/ui-render.js';
 import { isHttpUrl, datetimeLocalToExif } from './modules/utils.js';
 
 setRender(scheduleRender);
+
+async function saveBlob(blob, fileName) {
+  if (window.GeoHunterNative) {
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    let binary = '';
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    return saveNativeFile(fileName, blob.type || 'application/octet-stream', btoa(binary));
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 function onFile(file) {
   if (!file) return;
@@ -74,22 +92,21 @@ async function downloadCleanImage() {
     return;
   }
   try {
-    const r = await fetch(`${API}/api/exif/strip`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageBase64: state.imgB64 }),
-    });
-    if (!r.ok) {
-      const j = await r.json().catch(() => ({}));
-      throw new Error(j.error || 'Ошибка');
+    if (window.GeoHunterNative) {
+      const result = await postJson('/api/exif/strip', { imageBase64: state.imgB64 });
+      await saveNativeFile(result.filename, result.mimeType, result.base64);
+    } else {
+      const r = await fetch(`${API}/api/exif/strip`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: state.imgB64 }),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j.error || 'Ошибка');
+      }
+      await saveBlob(await r.blob(), 'clean.' + (r.headers.get('Content-Type')?.includes('jpeg') ? 'jpg' : 'png'));
     }
-    const blob = await r.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = blob.type === 'image/jpeg' ? 'clean.jpg' : 'clean.png';
-    a.click();
-    URL.revokeObjectURL(url);
   } catch (e) {
     alert('Не удалось удалить метаданные: ' + (e.message || e));
   }
@@ -105,10 +122,7 @@ async function exportReport() {
     report += `## ${id}\n\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\`\n\n`;
   }
   const blob = new Blob([report], { type: 'text/markdown' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'geohunter-report.md';
-  a.click();
+  await saveBlob(blob, 'geohunter-report.md');
 }
 
 async function exportJson() {
@@ -125,10 +139,7 @@ async function exportJson() {
     reverseLinks: state.results.reverse,
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'geohunter-export.json';
-  a.click();
+  await saveBlob(blob, 'geohunter-export.json');
 }
 
 async function handleGhAction(action, el) {

@@ -1,6 +1,10 @@
 package com.errorox.geohunter
 
 import android.content.Context
+import android.content.ContentValues
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.net.Uri
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -37,6 +41,53 @@ class GeoHunterNativeApi(
         }
     }
 
+    @JavascriptInterface
+    fun saveBase64(fileName: String, mimeType: String, encoded: String, callbackId: String) {
+        executor.execute {
+            val result = runCatching {
+                val bytes = android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
+                require(bytes.isNotEmpty() && bytes.size <= 50 * 1024 * 1024) { "Файл пуст или превышает 50 МБ." }
+                val safeName = fileName.substringAfterLast('/').substringAfterLast('\\\\')
+                    .replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "geohunter-export" }
+                val saved = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val values = ContentValues().apply {
+                        put(MediaStore.MediaColumns.DISPLAY_NAME, safeName)
+                        put(MediaStore.MediaColumns.MIME_TYPE, mimeType.ifBlank { "application/octet-stream" })
+                        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/GeoHunter")
+                        put(MediaStore.MediaColumns.IS_PENDING, 1)
+                    }
+                    val uri = context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                        ?: error("Не удалось создать файл в Downloads.")
+                    try {
+                        context.contentResolver.openOutputStream(uri)?.use { it.write(bytes) }
+                            ?: error("Не удалось записать файл.")
+                        values.clear()
+                        values.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                        context.contentResolver.update(uri, values, null, null)
+                        uri.toString()
+                    } catch (e: Exception) {
+                        context.contentResolver.delete(uri, null, null)
+                        throw e
+                    }
+                } else {
+                    val dir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "GeoHunter")
+                    dir.mkdirs()
+                    File(dir, safeName).writeBytes(bytes).absolutePath
+                }
+                JSONObject().put("success", true).put("saved", saved)
+            }.getOrElse {
+                JSONObject().put("success", false).put("error", it.message ?: "Не удалось сохранить файл.")
+            }
+            webView.post {
+                webView.evaluateJavascript(
+                    "window.__geoHunterNativeResolve && window.__geoHunterNativeResolve(" +
+                        JSONObject.quote(callbackId) + ", " + JSONObject.quote(result.toString()) + ")",
+                    null
+                )
+            }
+        }
+    }
+
     private fun dispatch(path: String, body: JSONObject): JSONObject {
         return when (path) {
             "/api/ui/host-os" -> JSONObject()
@@ -53,6 +104,10 @@ class GeoHunterNativeApi(
             "/api/forensics/noise" -> withImageBytes(body) { GeoHunterForensics.noise(it) }
             "/api/forensics/stego" -> withImageBytes(body) { GeoHunterForensics.stego(it) }
             "/api/forensics/shadow-solve" -> shadowSolve(body)
+            "/api/exif/strip" -> stripExif(body)
+            "/api/exif/exiftool/json", "/api/exif/exiftool/txt" -> JSONObject()
+                .put("success", false)
+                .put("error", "Полный вывод ExifTool пока не поддерживается Android. Доступные EXIF-поля показаны в основном анализе.")
             "/api/reverse-search", "/api/search" -> JSONObject()
                 .put("success", false)
                 .put("error", "Эта функция требует интернет-соединения. Локальный анализ GeoHunter продолжает работать без сети.")
@@ -190,6 +245,30 @@ class GeoHunterNativeApi(
             .put("image_height", inspected.imageHeight)
             .put("verdict", if (list.length() > 0) "Найдено лиц: ${list.length()}" else "Лица не обнаружены")
             .put("note", "Обнаружение выполнено локальной моделью ML Kit на Android.")
+    }
+
+
+    private fun stripExif(body: JSONObject): JSONObject = withImageBytes(body) { bytes ->
+        val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        require(bounds.outWidth > 0 && bounds.outHeight > 0) { "Формат изображения не поддерживается." }
+        val bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            ?: error("Не удалось декодировать изображение.")
+        try {
+            val isJpeg = body.optString("filename").endsWith(".jpg", true) ||
+                body.optString("filename").endsWith(".jpeg", true) ||
+                bytes.size > 2 && bytes[0] == 0xFF.toByte() && bytes[1] == 0xD8.toByte()
+            val output = java.io.ByteArrayOutputStream()
+            val format = if (isJpeg) android.graphics.Bitmap.CompressFormat.JPEG else android.graphics.Bitmap.CompressFormat.PNG
+            bitmap.compress(format, if (isJpeg) 92 else 100, output)
+            val data = android.util.Base64.encodeToString(output.toByteArray(), android.util.Base64.NO_WRAP)
+            JSONObject().put("success", true).put("base64", data)
+                .put("mimeType", if (isJpeg) "image/jpeg" else "image/png")
+                .put("filename", if (isJpeg) "clean.jpg" else "clean.png")
+                .put("note", "Изображение повторно закодировано без исходных EXIF-метаданных.")
+        } finally {
+            bitmap.recycle()
+        }
     }
 
     private fun shadowSolve(body: JSONObject): JSONObject {
