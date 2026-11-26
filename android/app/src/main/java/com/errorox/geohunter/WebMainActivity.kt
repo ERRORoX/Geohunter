@@ -44,6 +44,7 @@ class WebMainActivity : ComponentActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
             settings.javaScriptEnabled = true
+            addJavascriptInterface(GeoHunterNativeApi(this@WebMainActivity, this), "GeoHunterNative")
             settings.domStorageEnabled = true
             settings.allowFileAccess = false
             settings.allowContentAccess = false
