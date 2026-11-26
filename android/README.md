@@ -12,10 +12,13 @@ This first native milestone is an offline-first foundation:
 - Downsampled local image preview for large files.
 - JPEG ELA recompression-difference map (quality 90).
 - Local high-frequency luminance-residual map.
+- Sequential RGB LSB stream inspection, printable-string extraction, byte entropy, and common embedded-file signature checks.
 - Bounded analysis bitmap size to reduce memory pressure.
 - No Flask server, laptop, account, or network permission required for these workflows.
 
 ELA and noise maps are visual screening aids, not proof of manipulation. ELA is only generated for JPEG input; results depend on the image's compression history. The noise map highlights local brightness variation and is not a standalone authenticity classifier.
+
+The LSB module reads the least significant bit from each RGB channel in row-major order and inspects the resulting byte stream for printable fragments and common file signatures. It does not detect every steganography method: shuffled pixel orders, alternate bit planes, encrypted/compressed payloads, alpha-channel payloads, and JPEG-domain methods may not be found. A match or high entropy is not proof of hidden content.
 
 ## Open in Android Studio
 
@@ -41,7 +44,6 @@ The app does not request broad storage permissions. The user selects an image th
 
 ## Planned native ports
 
-- LSB inspection.
 - OCR and QR/barcode decoding.
 - Shadow and sun-position analysis.
 - Face detection.
