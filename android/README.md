@@ -9,10 +9,13 @@ This first native milestone is an offline-first foundation:
 - Image selection through Android Storage Access Framework.
 - Local EXIF metadata extraction.
 - GPS latitude/longitude extraction from EXIF.
-- Local image preview.
-- No Flask server, laptop, account, or network permission required for this workflow.
+- Downsampled local image preview for large files.
+- JPEG ELA recompression-difference map (quality 90).
+- Local high-frequency luminance-residual map.
+- Bounded analysis bitmap size to reduce memory pressure.
+- No Flask server, laptop, account, or network permission required for these workflows.
 
-The remaining GeoHunter analysis modules are listed in the UI as planned work. They are not represented as implemented yet.
+ELA and noise maps are visual screening aids, not proof of manipulation. ELA is only generated for JPEG input; results depend on the image's compression history. The noise map highlights local brightness variation and is not a standalone authenticity classifier.
 
 ## Open in Android Studio
 
@@ -34,11 +37,10 @@ The project uses Android Gradle Plugin 8.8.2, Kotlin 2.0.21, and compile SDK 35.
 
 ## Privacy
 
-The app does not request broad storage permissions. The user selects an image through the system document picker, and the app reads that selected URI. EXIF parsing is performed locally. GPS coordinates can be sensitive, so avoid sharing screenshots or exported reports containing them.
+The app does not request broad storage permissions. The user selects an image through the system document picker, and the app reads that selected URI. EXIF parsing, JPEG recompression, and noise-map generation are performed locally. GPS coordinates can be sensitive, so avoid sharing screenshots or exported reports containing them.
 
 ## Planned native ports
 
-- ELA and image-noise analysis.
 - LSB inspection.
 - OCR and QR/barcode decoding.
 - Shadow and sun-position analysis.
