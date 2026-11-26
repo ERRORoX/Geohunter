@@ -59,6 +59,8 @@ dependencies {
     implementation("androidx.exifinterface:exifinterface:1.4.0")
     // Bundled on-device models: OCR and barcode scanning work without model downloads.
     implementation("com.google.mlkit:text-recognition:16.0.1")
+    // Offline Russian + English OCR using bundled Tesseract 5 models.
+    implementation("cz.adaptech.tesseract4android:tesseract4android:4.9.0")
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
     implementation("com.google.mlkit:face-detection:16.1.7")
 
