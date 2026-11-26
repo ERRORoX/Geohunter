@@ -38,7 +38,7 @@ object ImageForensics {
         }
 
         var sample = 1
-        while (max(bounds.outWidth, bounds.outHeight) / sample > MAX_SIDE * 2) sample *= 2
+        while (max(bounds.outWidth, bounds.outHeight) / sample > MAX_SIDE) sample *= 2
         val options = BitmapFactory.Options().apply { inSampleSize = sample }
         val original = resolver.openInputStream(uri)?.use {
             BitmapFactory.decodeStream(it, null, options)
