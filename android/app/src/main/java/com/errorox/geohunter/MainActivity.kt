@@ -32,6 +32,20 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import org.maplibre.android.MapLibre
+import org.maplibre.android.annotations.Marker
+import org.maplibre.android.annotations.MarkerOptions
+import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.MapView
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -222,9 +236,11 @@ private fun GeoHunterApp() {
                         InfoRow("Долгота", ImageMetadataReader.formatCoordinate(data.longitude))
                         InfoRow("Высота GPS", data.gpsAltitude ?: "Нет данных")
                         if (data.latitude != null && data.longitude != null) {
-                            Text("Координаты извлечены из EXIF. Для просмотра на карте интернет не требуется только при наличии заранее загруженной офлайн-карты.", color = GhMuted, fontSize = 11.sp)
+                            Text("Координаты извлечены непосредственно из EXIF. Карта загружает картографические данные через интернет.", color = GhMuted, fontSize = 11.sp)
+                            Spacer(Modifier.height(10.dp))
+                            ExifLocationMap(latitude = data.latitude, longitude = data.longitude)
                         } else {
-                            Text("В выбранном файле GPS-координаты не обнаружены.", color = GhMuted, fontSize = 11.sp)
+                            Text("В выбранном файле GPS-координаты не обнаружены. Поэтому поставить достоверную точку съёмки на карте нельзя.", color = GhMuted, fontSize = 11.sp)
                         }
                     }
                 }
@@ -361,8 +377,9 @@ private fun GeoHunterApp() {
                     ToolStatus("ELA / Анализ шума", if (selectedUri != null && forensicOutcome?.result != null) "Доступно" else "Ожидает фото", selectedUri != null && forensicOutcome?.result != null)
                     ToolStatus("LSB / Стеганография", if (selectedUri != null && forensicOutcome?.result != null) "Доступно" else "Ожидает фото", selectedUri != null && forensicOutcome?.result != null)
                     ToolStatus("OCR / QR / Штрихкоды", if (textCodeOutcome?.result != null) "Доступно" else if (textCodeOutcome?.error != null) "Ошибка анализа" else if (selectedUri != null) "Анализ…" else "Ожидает фото", textCodeOutcome?.result != null)
-                    ToolStatus("Тени / Положение солнца", "Следующий этап разработки", false)
-                    ToolStatus("Детекция лиц", "Следующий этап разработки", false)
+                    ToolStatus("Карта GPS-фотографии", if (metadata?.latitude != null && metadata?.longitude != null) "Координаты найдены" else "Ожидает GPS", metadata?.latitude != null && metadata?.longitude != null)
+                    ToolStatus("Детекция лиц", if (sceneOutcome?.result != null) "Доступно" else if (selectedUri != null) "Анализ…" else "Ожидает фото", sceneOutcome?.result != null)
+                    ToolStatus("Тени / Освещение", if (sceneOutcome?.result != null) "Доступно" else if (selectedUri != null) "Анализ…" else "Ожидает фото", sceneOutcome?.result != null)
                 }
             }
 
@@ -370,6 +387,88 @@ private fun GeoHunterApp() {
                 Text("GeoHunter Android 0.1.0 · Локальная обработка EXIF/GPS", color = GhMuted, fontSize = 10.sp, modifier = Modifier.padding(vertical = 16.dp))
             }
         }
+    }
+}
+
+
+private const val GEOHUNTER_MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty"
+
+@Composable
+private fun ExifLocationMap(latitude: Double, longitude: Double) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val latestLatitude by rememberUpdatedState(latitude)
+    val latestLongitude by rememberUpdatedState(longitude)
+    val mapView = remember(context) {
+        MapLibre.getInstance(context)
+        MapView(context).apply { onCreate(null) }
+    }
+    var map by remember { mutableStateOf<MapLibreMap?>(null) }
+    var styleReady by remember { mutableStateOf(false) }
+    var marker by remember { mutableStateOf<Marker?>(null) }
+
+    DisposableEffect(mapView, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> mapView.onStart()
+                Lifecycle.Event.ON_RESUME -> mapView.onResume()
+                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
+                Lifecycle.Event.ON_STOP -> mapView.onStop()
+                Lifecycle.Event.ON_DESTROY -> mapView.onDestroy()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        mapView.getMapAsync { readyMap ->
+            map = readyMap
+            readyMap.setStyle(GEOHUNTER_MAP_STYLE) {
+                styleReady = true
+            }
+        }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            marker?.let { existing ->
+                try { map?.removeMarker(existing) } catch (_: Exception) { }
+            }
+            marker = null
+            map = null
+            styleReady = false
+            try { mapView.onDestroy() } catch (_: Exception) { }
+        }
+    }
+
+    LaunchedEffect(map, styleReady, latitude, longitude) {
+        val activeMap = map
+        if (activeMap != null && styleReady &&
+            latitude.isFinite() && longitude.isFinite() &&
+            latitude in -90.0..90.0 && longitude in -180.0..180.0
+        ) {
+            marker?.let { activeMap.removeMarker(it) }
+            marker = activeMap.addMarker(
+                MarkerOptions()
+                    .position(LatLng(latitude, longitude))
+                    .title("Место съёмки по EXIF GPS")
+                    .snippet(String.format(java.util.Locale.US, "%.6f, %.6f", latitude, longitude))
+            )
+            activeMap.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(LatLng(latitude, longitude), 15.0)
+            )
+        }
+    }
+
+    Column(Modifier.fillMaxWidth()) {
+        AndroidView(factory = { mapView }, modifier = Modifier.fillMaxWidth().height(250.dp))
+        Text(
+            "MapLibre · OpenFreeMap · ${String.format(java.util.Locale.US, "%.6f", latestLatitude)}, ${String.format(java.util.Locale.US, "%.6f", latestLongitude)}",
+            color = GhMuted,
+            fontSize = 10.sp,
+            modifier = Modifier.padding(top = 6.dp)
+        )
+        Text(
+            "Точка отражает координаты, записанные в файле фотографии; это не подтверждение подлинности GPS.",
+            color = GhMuted,
+            fontSize = 10.sp
+        )
     }
 }
 
