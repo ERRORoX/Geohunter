@@ -228,6 +228,29 @@ private fun GeoHunterApp() {
                                 ForensicImage(result.noiseBitmap, "Карта локальных различий яркости")
                                 InfoRow("Среднее отклонение", String.format(java.util.Locale.US, "%.2f / 255", result.noiseMeanResidual))
                                 Text("Карта показывает локальные перепады яркости и детали сцены. Она не определяет подделку автоматически.", color = GhMuted, fontSize = 11.sp)
+                                Spacer(Modifier.height(18.dp))
+                                Text("LSB · ПОИСК СКРЫТЫХ ДАННЫХ", color = GhAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                InfoRow("Доля битов = 1", String.format(java.util.Locale.US, "%.2f%%", result.lsbInspection.bitOnePercent))
+                                InfoRow("Энтропия байтов", String.format(java.util.Locale.US, "%.2f / 8 бит", result.lsbInspection.byteEntropy))
+                                InfoRow("Извлечено для проверки", "${result.lsbInspection.extractedBytes} байт")
+                                if (result.lsbInspection.detectedSignatures.isNotEmpty()) {
+                                    Text("Найденные сигнатуры:", color = GhAccent, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                    result.lsbInspection.detectedSignatures.forEach {
+                                        Text("• $it", color = Color(0xFFEAF0F6), fontSize = 11.sp)
+                                    }
+                                } else {
+                                    Text("Известные сигнатуры файлов в начале извлечённого потока не обнаружены.", color = GhMuted, fontSize = 11.sp)
+                                }
+                                if (result.lsbInspection.printableStrings.isNotEmpty()) {
+                                    Spacer(Modifier.height(8.dp))
+                                    Text("Печатные фрагменты:", color = GhAccent, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                    result.lsbInspection.printableStrings.forEach {
+                                        Text(it.take(120), color = Color(0xFFEAF0F6), fontSize = 10.sp)
+                                    }
+                                } else {
+                                    Text("Читаемые текстовые фрагменты не найдены.", color = GhMuted, fontSize = 11.sp)
+                                }
+                                Text("Проверяется последовательный LSB-поток каналов RGB. Другие алгоритмы, перестановки пикселей, шифрование и JPEG-стеганография могут остаться незамеченными. Статистика не является доказательством наличия скрытого сообщения.", color = GhMuted, fontSize = 11.sp)
                             }
                         }
                     }
@@ -238,7 +261,7 @@ private fun GeoHunterApp() {
                 SectionCard(title = "ИНСТРУМЕНТЫ GEOHUNTER") {
                     ToolStatus("EXIF / GPS", "Доступно", true)
                     ToolStatus("ELA / Анализ шума", if (selectedUri != null && forensicOutcome?.result != null) "Доступно" else "Ожидает фото", selectedUri != null && forensicOutcome?.result != null)
-                    ToolStatus("LSB / Стеганография", "Следующий этап разработки", false)
+                    ToolStatus("LSB / Стеганография", if (selectedUri != null && forensicOutcome?.result != null) "Доступно" else "Ожидает фото", selectedUri != null && forensicOutcome?.result != null)
                     ToolStatus("OCR / QR / Штрихкоды", "Следующий этап разработки", false)
                     ToolStatus("Тени / Положение солнца", "Следующий этап разработки", false)
                     ToolStatus("Детекция лиц", "Следующий этап разработки", false)
