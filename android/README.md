@@ -18,7 +18,7 @@ This first native milestone is an offline-first foundation:
 - On-device face detection with face rectangles and optional smile/eye-open probabilities.
 - A luminance percentile mask for dark and bright image regions, with a rough light-vector estimate in image coordinates.
 - Bounded analysis bitmap size to reduce memory pressure.
-- No Flask server, laptop, account, or network permission required for these workflows.
+- EXIF GPS coordinates are shown on an embedded native MapLibre map using the same OpenFreeMap Liberty style as the web project. Map tiles/styles require an internet connection; EXIF extraction itself remains local.
 
 ELA and noise maps are visual screening aids, not proof of manipulation. ELA is only generated for JPEG input; results depend on the image's compression history. The noise map highlights local brightness variation and is not a standalone authenticity classifier.
 
@@ -46,7 +46,7 @@ The project uses Android Gradle Plugin 8.8.2, Kotlin 2.0.21, and compile SDK 35.
 
 ## Privacy
 
-The app does not request broad storage permissions. The user selects an image through the system document picker, and the app reads that selected URI. EXIF parsing, JPEG recompression, noise analysis, OCR, barcode decoding, face detection, and luminance analysis are performed locally. GPS coordinates can be sensitive, so avoid sharing screenshots or exported reports containing them.
+The app requests INTERNET only for loading online map styles and tiles; it does not request broad storage permissions. The user selects an image through the system document picker, and the app reads that selected URI. EXIF parsing, JPEG recompression, noise analysis, OCR, barcode decoding, face detection, and luminance analysis are performed locally. GPS coordinates can be sensitive, so avoid sharing screenshots or exported reports containing them.
 
 ## Planned native ports
 
