@@ -52,6 +52,7 @@ class GeoHunterNativeApi(
             "/api/forensics/ela" -> withImageBytes(body) { GeoHunterForensics.ela(it, body.optInt("quality", 90), body.optDouble("scale", 20.0)) }
             "/api/forensics/noise" -> withImageBytes(body) { GeoHunterForensics.noise(it) }
             "/api/forensics/stego" -> withImageBytes(body) { GeoHunterForensics.stego(it) }
+            "/api/forensics/shadow-solve" -> shadowSolve(body)
             "/api/reverse-search", "/api/search" -> JSONObject()
                 .put("success", false)
                 .put("error", "Эта функция требует интернет-соединения. Локальный анализ GeoHunter продолжает работать без сети.")
@@ -124,7 +125,9 @@ class GeoHunterNativeApi(
             .put("software", software)
             .put("shooting", shooting)
             .put("privacy", JSONArray())
-            .put("sun", JSONObject().put("error", "Расчёт положения солнца будет подключён отдельно."))
+            .put("sun", if (meta.latitude != null && meta.longitude != null && !meta.dateTime.isNullOrBlank()) {
+                SolarPosition.result(meta.dateTime, meta.latitude, meta.longitude)
+            } else JSONObject().put("error", "Для расчёта солнца нужны GPS-координаты и дата съёмки в EXIF."))
             .put("hashes", JSONObject())
             .put("perceptual", JSONObject())
             .put("meta", JSONObject().put("filename", meta.fileName).put("mime_type", meta.mimeType))
@@ -188,4 +191,54 @@ class GeoHunterNativeApi(
             .put("verdict", if (list.length() > 0) "Найдено лиц: ${list.length()}" else "Лица не обнаружены")
             .put("note", "Обнаружение выполнено локальной моделью ML Kit на Android.")
     }
+
+    private fun shadowSolve(body: JSONObject): JSONObject {
+        val h = body.optDouble("objectHeight", body.optDouble("object_height", 1.0))
+        val l = body.optDouble("shadowLength", body.optDouble("shadow_length", 1.5))
+        if (!h.isFinite() || !l.isFinite() || h <= 0.0 || l <= 0.0) {
+            return JSONObject().put("success", false).put("error", "Некорректные размеры объекта или тени.")
+        }
+        val dt = body.optString("dt", body.optString("date", ""))
+        if (dt.isBlank()) return JSONObject().put("success", false)
+            .put("error", "Нет даты съёмки в EXIF. Укажите дату вручную.")
+        val target = Math.toDegrees(kotlin.math.atan2(h, l))
+        val coords = JSONArray()
+        val matched = mutableListOf<Double>()
+        for (lon in -180..180 step 4) {
+            var bestLat: Int? = null
+            var bestDiff = Double.MAX_VALUE
+            for (lat in -66..66) {
+                val elevation = runCatching { SolarPosition.position(dt, lat.toDouble(), lon.toDouble()).second }.getOrNull() ?: continue
+                val diff = kotlin.math.abs(elevation - target)
+                if (diff < bestDiff) { bestDiff = diff; bestLat = lat }
+            }
+            if (bestLat != null && bestDiff <= 3.0) {
+                coords.put(JSONArray().put(lon.toDouble()).put(bestLat.toDouble()))
+                matched.add(bestLat.toDouble())
+            }
+        }
+        val summary = if (matched.isEmpty()) {
+            "Нет совпадений для этого угла и времени (солнце под горизонтом или угол недостижим)."
+        } else {
+            val lo = matched.minOrNull()!!
+            val hi = matched.maxOrNull()!!
+            fun fmt(v: Double) = "${kotlin.math.abs(v).toInt()}° ${if (v >= 0) "с.ш." else "ю.ш."}"
+            if (kotlin.math.abs(hi - lo) < 0.5) "≈ ${fmt(lo)}" else "${fmt(lo)} — ${fmt(hi)}"
+        }
+        val geojson = if (coords.length() >= 2) JSONObject()
+            .put("type", "FeatureCollection")
+            .put("features", JSONArray().put(JSONObject()
+                .put("type", "Feature")
+                .put("properties", JSONObject().put("kind", "shadow_sun_locus"))
+                .put("geometry", JSONObject().put("type", "LineString").put("coordinates", coords))))
+            else JSONObject.NULL
+        return JSONObject().put("success", true)
+            .put("objectHeight", h).put("shadowLength", l)
+            .put("elevation", String.format(Locale.US, "%.2f", target).toDouble())
+            .put("tolerance_deg", 3.0).put("latitude_summary", summary)
+            .put("latitude_min", matched.minOrNull() ?: JSONObject.NULL)
+            .put("latitude_max", matched.maxOrNull() ?: JSONObject.NULL)
+            .put("match_points", coords.length()).put("geojson", geojson)
+    }
+
 }

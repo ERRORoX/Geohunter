@@ -117,7 +117,6 @@ object GeoHunterForensics {
         val mean = variance.average()
         val outPixels = IntArray(variance.size) { i ->
             val v = ((variance[i] - mean) * 3.0 + mean).toInt().coerceIn(0, 255)
-            total += v
             Color.rgb(v, v, v)
         }
         val result = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
