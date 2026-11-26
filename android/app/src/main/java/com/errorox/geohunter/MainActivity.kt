@@ -54,6 +54,8 @@ private val GhSurface = Color(0xFF111923)
 private val GhAccent = Color(0xFF00E5A0)
 private val GhMuted = Color(0xFF8B9AA9)
 
+data class ForensicOutcome(val result: ForensicResult?, val error: String? = null)
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,6 +80,17 @@ private fun GeoHunterApp() {
     var selectedUri by remember { mutableStateOf<Uri?>(null) }
     var metadata by remember { mutableStateOf<ImageMetadata?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
+    val forensicOutcome by produceState<ForensicOutcome?>(initialValue = null, key1 = selectedUri) {
+        value = selectedUri?.let { uri ->
+            withContext(Dispatchers.IO) {
+                try {
+                    ForensicOutcome(ImageForensics.analyze(context.contentResolver, uri, context.contentResolver.getType(uri)))
+                } catch (e: Exception) {
+                    ForensicOutcome(null, e.localizedMessage ?: "Не удалось выполнить анализ")
+                }
+            }
+        }
+    }
 
     val picker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -190,10 +203,41 @@ private fun GeoHunterApp() {
                 }
             }
 
+            if (selectedUri != null) {
+                item {
+                    val outcome = forensicOutcome
+                    SectionCard(title = "ЦИФРОВАЯ КРИМИНАЛИСТИКА") {
+                        when {
+                            outcome == null -> Text("Выполняется локальный анализ изображения…", color = GhMuted, fontSize = 12.sp)
+                            outcome.error != null -> Text(outcome.error, color = Color(0xFFFF7777), fontSize = 12.sp)
+                            outcome.result != null -> {
+                                val result = outcome.result
+                                Text("Размер исходника: ${result.sourceWidth} × ${result.sourceHeight}", color = GhMuted, fontSize = 11.sp)
+                                Text("Размер анализа: ${result.sampledWidth} × ${result.sampledHeight} px", color = GhMuted, fontSize = 11.sp)
+                                Spacer(Modifier.height(12.dp))
+                                if (result.isJpeg && result.elaBitmap != null) {
+                                    Text("ELA · JPEG ERROR LEVEL ANALYSIS", color = GhAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    ForensicImage(result.elaBitmap, "Карта различий после JPEG-пересжатия")
+                                    InfoRow("Средняя разница RGB", String.format(java.util.Locale.US, "%.2f / 255", result.elaMeanDifference ?: 0.0))
+                                    Text("Яркие участки показывают различия после повторного JPEG-сохранения. Это ориентир для проверки, а не доказательство редактирования.", color = GhMuted, fontSize = 11.sp)
+                                } else {
+                                    Text("ELA доступен только для JPEG. Для этого файла построена карта высокочастотных отклонений.", color = GhMuted, fontSize = 11.sp)
+                                }
+                                Spacer(Modifier.height(14.dp))
+                                Text("NOISE · КАРТА ВЫСОКОЧАСТОТНЫХ ОТКЛОНЕНИЙ", color = GhAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                ForensicImage(result.noiseBitmap, "Карта локальных различий яркости")
+                                InfoRow("Среднее отклонение", String.format(java.util.Locale.US, "%.2f / 255", result.noiseMeanResidual))
+                                Text("Карта показывает локальные перепады яркости и детали сцены. Она не определяет подделку автоматически.", color = GhMuted, fontSize = 11.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
             item {
                 SectionCard(title = "ИНСТРУМЕНТЫ GEOHUNTER") {
                     ToolStatus("EXIF / GPS", "Доступно", true)
-                    ToolStatus("ELA / Анализ шума", "Следующий этап разработки", false)
+                    ToolStatus("ELA / Анализ шума", if (selectedUri != null && forensicOutcome?.result != null) "Доступно" else "Ожидает фото", selectedUri != null && forensicOutcome?.result != null)
                     ToolStatus("LSB / Стеганография", "Следующий этап разработки", false)
                     ToolStatus("OCR / QR / Штрихкоды", "Следующий этап разработки", false)
                     ToolStatus("Тени / Положение солнца", "Следующий этап разработки", false)
@@ -234,6 +278,17 @@ private fun ImagePreview(uri: Uri) {
             }
         }
     }
+}
+
+@Composable
+private fun ForensicImage(bitmap: Bitmap, description: String) {
+    Image(
+        bitmap = bitmap.asImageBitmap(),
+        contentDescription = description,
+        modifier = Modifier.fillMaxWidth().height(210.dp),
+        contentScale = ContentScale.Fit
+    )
+    Spacer(Modifier.height(6.dp))
 }
 
 @Composable
