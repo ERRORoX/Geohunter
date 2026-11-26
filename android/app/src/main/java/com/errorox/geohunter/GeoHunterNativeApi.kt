@@ -197,13 +197,17 @@ class GeoHunterNativeApi(
     }
 
     private fun ocr(body: JSONObject): JSONObject = withImage(body) { uri ->
-        val inspected = ImageTextCodeAnalyzer.analyze(context.contentResolver, uri)
-        val text = inspected.recognizedText
-        val emails = Regex("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}", RegexOption.IGNORE_CASE)
+        val inspected = OfflineTesseractOcr.recognize(
+            context,
+            uri,
+            body.optString("lang", "rus+eng")
+        )
+        val text = inspected.text
+        val emails = Regex("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\\\.[A-Z]{2,}", RegexOption.IGNORE_CASE)
             .findAll(text).map { it.value }.distinct().take(30).toList()
-        val urls = Regex("\\bhttps?://[^\\s<>()\\\"']+\\b", RegexOption.IGNORE_CASE)
+        val urls = Regex("\\\\bhttps?://[^\\\\s<>()\\\\\\"']+\\\\b", RegexOption.IGNORE_CASE)
             .findAll(text).map { it.value }.distinct().take(30).toList()
-        val phones = Regex("\\b(?:\\+?\\d[\\d\\s().-]{7,}\\d)\\b")
+        val phones = Regex("\\\\b(?:\\\\+?\\\\d[\\\\d\\\\s().-]{7,}\\\\d)\\\\b")
             .findAll(text).map { it.value }.distinct().take(30).toList()
         JSONObject()
             .put("success", true)
@@ -211,10 +215,8 @@ class GeoHunterNativeApi(
             .put("emails", JSONArray(emails))
             .put("urls", JSONArray(urls))
             .put("phones", JSONArray(phones))
-            .put("lang", "eng")
-            .put("hint", if (body.optString("lang", "rus+eng").contains("rus", true))
-                "Встроенная модель Android распознаёт латинский алфавит. Русский OCR пока не подключён; язык результата не подменяется."
-            else JSONObject.NULL)
+            .put("lang", inspected.language)
+            .put("hint", if (text.isBlank()) "Текст не распознан. Попробуйте более чёткое и контрастное изображение." else JSONObject.NULL)
     }
 
     private fun qr(body: JSONObject): JSONObject = withImage(body) { uri ->
