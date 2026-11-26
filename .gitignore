@@ -28,3 +28,14 @@ temp/
 .cursor/
 .DS_Store
 Thumbs.db
+
+
+# Android / Gradle
+.gradle/
+**/build/
+local.properties
+*.iml
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
