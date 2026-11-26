@@ -11,6 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,10 +67,14 @@ import kotlinx.coroutines.withContext
 import java.util.Locale
 import kotlin.math.roundToInt
 
-private val GhBackground = Color(0xFF080C12)
-private val GhSurface = Color(0xFF111923)
-private val GhAccent = Color(0xFF00E5A0)
-private val GhMuted = Color(0xFF8B9AA9)
+private val GhBackground = Color(0xFF060608) // GeoHunter --bg-page
+private val GhSurface = Color(0xFF0A0A0E) // GeoHunter --bg-card
+private val GhPanel = Color(0xFF0C0C10) // GeoHunter --bg-panel
+private val GhAccent = Color(0xFF00FF88) // GeoHunter --accent
+private val GhCyan = Color(0xFF00D4FF) // GeoHunter --cyan
+private val GhMuted = Color(0xFF5C6B66) // GeoHunter --text-muted
+private val GhText = Color(0xFFD8E4E0) // GeoHunter --text
+private val GhBorder = Color(0xFF1A1A22) // GeoHunter --border
 
 data class ForensicOutcome(val result: ForensicResult?, val error: String? = null)
 data class TextCodeOutcome(val result: TextCodeInspection?, val error: String? = null)
@@ -82,10 +87,10 @@ class MainActivity : ComponentActivity() {
             MaterialTheme(colorScheme = darkColorScheme(
                 primary = GhAccent,
                 background = GhBackground,
-                surface = GhSurface,
+                surface = GhPanel,
                 onPrimary = Color.Black,
-                onBackground = Color(0xFFEAF0F6),
-                onSurface = Color(0xFFEAF0F6)
+                onBackground = GhText,
+                onSurface = GhText
             )) {
                 GeoHunterApp()
             }
@@ -167,15 +172,15 @@ private fun GeoHunterApp() {
                 Spacer(Modifier.height(22.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier.size(42.dp).background(GhAccent, RoundedCornerShape(12.dp)),
+                        modifier = Modifier.size(40.dp).background(Color(0x1F00FF88), RoundedCornerShape(8.dp)).then(Modifier),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("GH", color = Color.Black, fontWeight = FontWeight.Black, fontSize = 17.sp)
+                        Text("G", color = GhAccent, fontWeight = FontWeight.Bold, fontSize = 22.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
                     }
                     Spacer(Modifier.width(12.dp))
                     Column {
-                        Text("GEOHUNTER", fontWeight = FontWeight.Black, fontSize = 22.sp, letterSpacing = 2.sp)
-                        Text("LOCAL IMAGE INTELLIGENCE", color = GhMuted, fontSize = 10.sp, letterSpacing = 1.5.sp)
+                        Text("GeoHunter", fontWeight = FontWeight.SemiBold, fontSize = 21.sp, letterSpacing = 1.2.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                        Text("Поиск по фотографии · EXIF, обратный поиск, OCR, QR", color = GhMuted, fontSize = 10.sp, letterSpacing = 0.2.sp)
                     }
                 }
                 Spacer(Modifier.height(22.dp))
@@ -186,8 +191,8 @@ private fun GeoHunterApp() {
             }
 
             item {
-                Card(colors = CardDefaults.cardColors(containerColor = GhSurface), shape = RoundedCornerShape(18.dp)) {
-                    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                Card(colors = CardDefaults.cardColors(containerColor = GhSurface), shape = RoundedCornerShape(10.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(12.dp)) {
                         Text("ИСТОЧНИК ДАННЫХ", color = GhMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                         Spacer(Modifier.height(12.dp))
                         Button(
@@ -283,7 +288,7 @@ private fun GeoHunterApp() {
                                 if (result.lsbInspection.detectedSignatures.isNotEmpty()) {
                                     Text("Найденные сигнатуры:", color = GhAccent, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                                     result.lsbInspection.detectedSignatures.forEach {
-                                        Text("• $it", color = Color(0xFFEAF0F6), fontSize = 11.sp)
+                                        Text("• $it", color = GhText, fontSize = 11.sp)
                                     }
                                 } else {
                                     Text("Известные сигнатуры файлов в начале извлечённого потока не обнаружены.", color = GhMuted, fontSize = 11.sp)
@@ -543,7 +548,7 @@ private fun ImagePreview(uri: Uri) {
         }
     }
     Card(colors = CardDefaults.cardColors(containerColor = GhSurface), shape = RoundedCornerShape(18.dp)) {
-        Column(Modifier.fillMaxWidth().padding(12.dp)) {
+        Column(Modifier.fillMaxWidth().padding(10.dp)) {
             Text("ПРЕДПРОСМОТР", color = GhMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(10.dp))
             if (bitmap != null) {
