@@ -16,6 +16,17 @@ android {
         versionName = "0.1.0"
     }
 
+    // Build one APK per CPU architecture instead of bundling every native
+    // library into one oversized universal APK.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
+            isUniversalApk = false
+        }
+    }
+
     buildFeatures {
         compose = true
     }
