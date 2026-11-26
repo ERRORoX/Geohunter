@@ -17,9 +17,18 @@ The remaining GeoHunter analysis modules are listed in the UI as planned work. T
 ## Open in Android Studio
 
 1. Open the `android/` directory as a project in Android Studio.
-2. Use JDK 17.
+2. Use JDK 17 and Gradle 8.10.2.
 3. Allow Gradle to sync and download Android dependencies.
 4. Build and run the `app` configuration on an Android 8.0 (API 26) or newer device.
+
+This initial repository scaffold does not include the Gradle wrapper JAR. If Android Studio asks for a local Gradle distribution, select Gradle 8.10.2. Alternatively, with Gradle 8.10.2 installed, run from this directory:
+
+```bash
+gradle wrapper --gradle-version 8.10.2
+./gradlew assembleDebug
+```
+
+The APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
 
 The project uses Android Gradle Plugin 8.8.2, Kotlin 2.0.21, and compile SDK 35.
 
