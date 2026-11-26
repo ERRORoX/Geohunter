@@ -209,7 +209,10 @@ class GeoHunterNativeApi(
             .put("emails", JSONArray(emails))
             .put("urls", JSONArray(urls))
             .put("phones", JSONArray(phones))
-            .put("lang", body.optString("lang", "rus+eng"))
+            .put("lang", "eng")
+            .put("hint", if (body.optString("lang", "rus+eng").contains("rus", true))
+                "Встроенная модель Android распознаёт латинский алфавит. Русский OCR пока не подключён; язык результата не подменяется."
+            else JSONObject.NULL)
     }
 
     private fun qr(body: JSONObject): JSONObject = withImage(body) { uri ->
