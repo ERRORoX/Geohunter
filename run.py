@@ -50,8 +50,8 @@ def main() -> None:
     import geohunter_blueprint as gh
 
     port = int(os.environ.get("PORT", "5050"))
-    host = os.environ.get("HOST", "0.0.0.0")
-    debug_env = os.environ.get("FLASK_DEBUG", "1").strip().lower()
+    host = os.environ.get("HOST", "127.0.0.1")
+    debug_env = os.environ.get("FLASK_DEBUG", "0").strip().lower()
     debug = debug_env not in ("0", "false", "no", "off")
     use_reloader = debug and os.environ.get("FLASK_USE_RELOADER", "0").strip().lower() in (
         "1",
