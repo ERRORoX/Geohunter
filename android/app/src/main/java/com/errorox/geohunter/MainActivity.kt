@@ -2,6 +2,7 @@ package com.errorox.geohunter
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.location.Geocoder
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -62,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Locale
 import kotlin.math.roundToInt
 
 private val GhBackground = Color(0xFF080C12)
@@ -239,6 +241,8 @@ private fun GeoHunterApp() {
                             Text("Координаты извлечены непосредственно из EXIF. Карта загружает картографические данные через интернет.", color = GhMuted, fontSize = 11.sp)
                             Spacer(Modifier.height(10.dp))
                             ExifLocationMap(latitude = data.latitude, longitude = data.longitude)
+                            Spacer(Modifier.height(10.dp))
+                            ExifReverseGeocoding(latitude = data.latitude, longitude = data.longitude)
                         } else {
                             Text("В выбранном файле GPS-координаты не обнаружены. Поэтому поставить достоверную точку съёмки на карте нельзя.", color = GhMuted, fontSize = 11.sp)
                         }
@@ -466,6 +470,55 @@ private fun ExifLocationMap(latitude: Double, longitude: Double) {
         )
         Text(
             "Точка отражает координаты, записанные в файле фотографии; это не подтверждение подлинности GPS.",
+            color = GhMuted,
+            fontSize = 10.sp
+        )
+    }
+}
+
+@Composable
+private fun ExifReverseGeocoding(latitude: Double, longitude: Double) {
+    val context = LocalContext.current
+    val address by produceState(
+        initialValue = "Определение адреса…",
+        key1 = latitude,
+        key2 = longitude
+    ) {
+        value = withContext(Dispatchers.IO) {
+            if (!Geocoder.isPresent()) {
+                "Служба определения адресов недоступна на этом устройстве"
+            } else {
+                try {
+                    @Suppress("DEPRECATION")
+                    val matches = Geocoder(context, Locale.getDefault())
+                        .getFromLocation(latitude, longitude, 1)
+                    val place = matches?.firstOrNull()
+                    if (place == null) {
+                        "Адрес для этих координат не найден"
+                    } else {
+                        listOfNotNull(
+                            place.thoroughfare,
+                            place.subThoroughfare,
+                            place.locality ?: place.subAdminArea,
+                            place.adminArea,
+                            place.countryName
+                        ).distinct().joinToString(", ").ifBlank {
+                            "Адресные сведения не предоставлены"
+                        }
+                    }
+                } catch (_: Exception) {
+                    "Не удалось определить адрес. Проверьте подключение к интернету."
+                }
+            }
+        }
+    }
+
+    Column(Modifier.fillMaxWidth()) {
+        Text("ПРИБЛИЗИТЕЛЬНЫЙ АДРЕС", color = GhAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(4.dp))
+        Text(address, color = Color(0xFFEAF0F6), fontSize = 12.sp)
+        Text(
+            "Адрес получен по координатам через системную службу геокодирования; точность зависит от картографических данных.",
             color = GhMuted,
             fontSize = 10.sp
         )
