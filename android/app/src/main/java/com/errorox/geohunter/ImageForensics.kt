@@ -153,13 +153,15 @@ object ImageForensics {
             val redBit = (pixel shr 16) and 1
             val greenBit = (pixel shr 8) and 1
             val blueBit = pixel and 1
-            val channelBits = intArrayOf(redBit, greenBit, blueBit)
-            for (bit in channelBits) {
-                if (bit == 1) ones++
-                val byteIndex = bitIndex / 8
-                bytes[byteIndex] = (bytes[byteIndex].toInt() or (bit shl (7 - bitIndex % 8))).toByte()
-                bitIndex++
-            }
+            if (redBit == 1) ones++
+            bytes[bitIndex / 8] = (bytes[bitIndex / 8].toInt() or (redBit shl (7 - bitIndex % 8))).toByte()
+            bitIndex++
+            if (greenBit == 1) ones++
+            bytes[bitIndex / 8] = (bytes[bitIndex / 8].toInt() or (greenBit shl (7 - bitIndex % 8))).toByte()
+            bitIndex++
+            if (blueBit == 1) ones++
+            bytes[bitIndex / 8] = (bytes[bitIndex / 8].toInt() or (blueBit shl (7 - bitIndex % 8))).toByte()
+            bitIndex++
         }
 
         val frequencies = IntArray(256)
