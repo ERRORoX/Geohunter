@@ -166,28 +166,28 @@ private fun GeoHunterApp() {
 
     Surface(modifier = Modifier.fillMaxSize(), color = GhBackground) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             item {
-                Spacer(Modifier.height(22.dp))
+                Spacer(Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier.size(40.dp).background(Color(0x1F00FF88), RoundedCornerShape(8.dp)),
+                        modifier = Modifier.size(28.dp).background(Color(0x1F00FF88), RoundedCornerShape(8.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("G", color = GhAccent, fontWeight = FontWeight.Bold, fontSize = 22.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                        Text("G", color = GhAccent, fontWeight = FontWeight.Bold, fontSize = 16.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
                     }
                     Spacer(Modifier.width(12.dp))
                     Column {
                         Row {
-                            Text("Geo", color = GhAccent, fontWeight = FontWeight.SemiBold, fontSize = 21.sp, letterSpacing = 1.2.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
-                            Text("Hunter", color = GhMuted, fontWeight = FontWeight.Medium, fontSize = 21.sp, letterSpacing = 1.2.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                            Text("Geo", color = GhAccent, fontWeight = FontWeight.Bold, fontSize = 13.sp, letterSpacing = 0.2.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                            Text("Hunter", color = GhMuted, fontWeight = FontWeight.Bold, fontSize = 13.sp, letterSpacing = 0.2.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
                         }
-                        Text("Поиск по фотографии · EXIF, обратный поиск, OCR, QR", color = GhMuted, fontSize = 10.sp, letterSpacing = 0.2.sp)
+                        Text("Поиск по фотографии · EXIF, обратный поиск, OCR, QR", color = GhMuted, fontSize = 8.sp, letterSpacing = 0.1.sp)
                     }
                 }
-                Spacer(Modifier.height(22.dp))
+                Spacer(Modifier.height(16.dp))
                 Text("ПАНЕЛЬ АНАЛИЗА", color = GhAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
                 Text("Исследование изображения", color = GhText, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
                 Text("Обработка выбранного файла выполняется на устройстве.", color = GhMuted, fontSize = 13.sp)
@@ -195,7 +195,7 @@ private fun GeoHunterApp() {
             }
 
             item {
-                Card(colors = CardDefaults.cardColors(containerColor = GhSurface), shape = RoundedCornerShape(10.dp)) {
+                Card(colors = CardDefaults.cardColors(containerColor = GhSurface), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, GhBorder)) {
                     Column(Modifier.fillMaxWidth().padding(12.dp)) {
                         Text("ИСТОЧНИК ДАННЫХ", color = GhMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                         Spacer(Modifier.height(12.dp))
@@ -589,7 +589,7 @@ private fun ForensicImage(bitmap: Bitmap, description: String) {
 
 @Composable
 private fun SectionCard(title: String, content: @Composable () -> Unit) {
-    Card(colors = CardDefaults.cardColors(containerColor = GhSurface), shape = RoundedCornerShape(18.dp)) {
+    Card(colors = CardDefaults.cardColors(containerColor = GhSurface), shape = RoundedCornerShape(10.dp), border = BorderStroke(1.dp, GhBorder)) {
         Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Text(title, color = GhAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
             Spacer(Modifier.height(10.dp))
@@ -601,7 +601,7 @@ private fun SectionCard(title: String, content: @Composable () -> Unit) {
 @Composable
 private fun InfoRow(label: String, value: String) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Top
     ) {
