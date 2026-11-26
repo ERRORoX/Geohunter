@@ -46,6 +46,7 @@ dependencies {
     // Bundled on-device models: OCR and barcode scanning work without model downloads.
     implementation("com.google.mlkit:text-recognition:16.0.1")
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    implementation("com.google.mlkit:face-detection:16.1.7")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
