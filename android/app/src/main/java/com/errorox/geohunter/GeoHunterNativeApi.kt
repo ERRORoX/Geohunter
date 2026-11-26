@@ -49,6 +49,9 @@ class GeoHunterNativeApi(
             "/api/ocr" -> ocr(body)
             "/api/qr-barcode" -> qr(body)
             "/api/forensics/faces" -> faces(body)
+            "/api/forensics/ela" -> withImageBytes(body) { GeoHunterForensics.ela(it, body.optInt("quality", 90), body.optDouble("scale", 20.0)) }
+            "/api/forensics/noise" -> withImageBytes(body) { GeoHunterForensics.noise(it) }
+            "/api/forensics/stego" -> withImageBytes(body) { GeoHunterForensics.stego(it) }
             "/api/reverse-search", "/api/search" -> JSONObject()
                 .put("success", false)
                 .put("error", "Эта функция требует интернет-соединения. Локальный анализ GeoHunter продолжает работать без сети.")
@@ -56,6 +59,17 @@ class GeoHunterNativeApi(
                 .put("success", false)
                 .put("error", "Локальный API пока не реализован для маршрута: $path")
         }
+    }
+
+
+    private fun withImageBytes(body: JSONObject, action: (ByteArray) -> JSONObject): JSONObject {
+        val encoded = body.optString("imageBase64", body.optString("image_base64", ""))
+            .let { if (it.startsWith("data:")) it.substringAfter(",", "") else it }
+        require(encoded.isNotBlank()) { "Загрузите файл изображения." }
+        val bytes = android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
+        require(bytes.isNotEmpty()) { "Файл изображения пуст." }
+        require(bytes.size <= 40 * 1024 * 1024) { "Изображение превышает лимит 40 МБ." }
+        return action(bytes)
     }
 
     private fun withImage(body: JSONObject, action: (Uri) -> JSONObject): JSONObject {
