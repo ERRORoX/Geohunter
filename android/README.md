@@ -13,12 +13,14 @@ This first native milestone is an offline-first foundation:
 - JPEG ELA recompression-difference map (quality 90).
 - Local high-frequency luminance-residual map.
 - Sequential RGB LSB stream inspection, printable-string extraction, byte entropy, and common embedded-file signature checks.
+- On-device OCR using the bundled ML Kit Latin text-recognition model.
+- QR-code and common 1D/2D barcode decoding using the bundled ML Kit barcode model.
 - Bounded analysis bitmap size to reduce memory pressure.
 - No Flask server, laptop, account, or network permission required for these workflows.
 
 ELA and noise maps are visual screening aids, not proof of manipulation. ELA is only generated for JPEG input; results depend on the image's compression history. The noise map highlights local brightness variation and is not a standalone authenticity classifier.
 
-The LSB module reads the least significant bit from each RGB channel in row-major order and inspects the resulting byte stream for printable fragments and common file signatures. It does not detect every steganography method: shuffled pixel orders, alternate bit planes, encrypted/compressed payloads, alpha-channel payloads, and JPEG-domain methods may not be found. A match or high entropy is not proof of hidden content.
+The LSB module reads the least significant bit from each RGB channel in row-major order and inspects the resulting byte stream for printable fragments and common file signatures. It does not detect every steganography method: shuffled pixel orders, alternate bit planes, encrypted/compressed payloads, alpha-channel payloads, and JPEG-domain methods may not be found. A match or high entropy is not proof of hidden content.\n\nOCR and QR/barcode recognition use bundled ML Kit models and run on the selected image locally. The app does not automatically open decoded links or execute decoded content. OCR is fallible and should be checked against the source image. The analyzer limits the working image to 1600 pixels on its longest side and returns at most 12,000 text characters and 30 distinct codes.
 
 ## Open in Android Studio
 
@@ -44,7 +46,6 @@ The app does not request broad storage permissions. The user selects an image th
 
 ## Planned native ports
 
-- OCR and QR/barcode decoding.
 - Shadow and sun-position analysis.
 - Face detection.
 - Offline map support and local case/report storage.
