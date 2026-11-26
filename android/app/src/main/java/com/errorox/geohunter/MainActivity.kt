@@ -1,5 +1,6 @@
 package com.errorox.geohunter
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Geocoder
@@ -218,6 +219,22 @@ private fun GeoHunterApp() {
 
             selectedUri?.let { uri ->
                 item { ImagePreview(uri) }
+                item {
+                    SectionCard(title = "ОБРАТНЫЙ ПОИСК ИЗОБРАЖЕНИЯ") {
+                        Text(
+                            "Передайте выбранное фото в приложение поиска изображений. Отправка произойдёт только после вашего выбора в системном меню Android.",
+                            color = GhMuted,
+                            fontSize = 11.sp
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = { shareForReverseSearch(context, uri) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Поделиться для обратного поиска")
+                        }
+                    }
+                }
             }
 
             metadata?.let { data ->
@@ -384,6 +401,36 @@ private fun GeoHunterApp() {
                 }
             }
 
+            if (selectedUri != null) {
+                item {
+                    SectionCard(title = "ВЕБ-ПОИСК ПО ДАННЫМ ФОТО") {
+                        val searchTerms = listOfNotNull(
+                            metadata?.cameraMake,
+                            metadata?.cameraModel,
+                            metadata?.dateTime,
+                            metadata?.fileName
+                        ).joinToString(" ").ifBlank { metadata?.fileName ?: "изображение" }
+                        Text(
+                            "Поиск использует только текстовые сведения о файле и EXIF. Само изображение в поисковик не передаётся.",
+                            color = GhMuted,
+                            fontSize = 11.sp
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            OutlinedButton(onClick = { openWebSearch(context, "google", searchTerms) }) {
+                                Text("Google")
+                            }
+                            OutlinedButton(onClick = { openWebSearch(context, "yandex", searchTerms) }) {
+                                Text("Яндекс")
+                            }
+                            OutlinedButton(onClick = { openWebSearch(context, "duckduckgo", searchTerms) }) {
+                                Text("DuckDuckGo")
+                            }
+                        }
+                    }
+                }
+            }
+
             item {
                 SectionCard(title = "ИНСТРУМЕНТЫ GEOHUNTER") {
                     ToolStatus("EXIF / GPS", "Доступно", true)
@@ -483,6 +530,25 @@ private fun ExifLocationMap(latitude: Double, longitude: Double) {
             fontSize = 10.sp
         )
     }
+}
+
+private fun shareForReverseSearch(context: android.content.Context, imageUri: Uri) {
+    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+        type = context.contentResolver.getType(imageUri) ?: "image/*"
+        putExtra(Intent.EXTRA_STREAM, imageUri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(Intent.createChooser(shareIntent, "Обратный поиск изображения"))
+}
+
+private fun openWebSearch(context: android.content.Context, engine: String, query: String) {
+    val encoded = Uri.encode(query)
+    val url = when (engine) {
+        "yandex" -> "https://yandex.com/search/?text=$encoded"
+        "duckduckgo" -> "https://duckduckgo.com/?q=$encoded"
+        else -> "https://www.google.com/search?q=$encoded"
+    }
+    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
 }
 
 @Composable
