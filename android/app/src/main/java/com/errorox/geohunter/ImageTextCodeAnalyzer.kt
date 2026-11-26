@@ -59,7 +59,7 @@ object ImageTextCodeAnalyzer {
         val input = InputImage.fromBitmap(bitmap, 0)
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         val scannerOptions = BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_ALL)
+            .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
             .build()
         val scanner = BarcodeScanning.getClient(scannerOptions)
 
