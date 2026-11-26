@@ -145,7 +145,7 @@ object ImageForensics {
         source.getPixels(pixels, 0, source.width, 0, 0, source.width, source.height)
 
         val bitCount = pixels.size * 3
-        val bytes = ByteArray(bitCount / 8)
+        val bytes = ByteArray((bitCount + 7) / 8)
         var ones = 0
         var bitIndex = 0
 
