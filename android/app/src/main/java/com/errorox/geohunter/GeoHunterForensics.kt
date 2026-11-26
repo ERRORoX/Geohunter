@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.util.Base64
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.Locale
@@ -51,10 +52,10 @@ object GeoHunterForensics {
         compressed.getPixels(b, 0, w, 0, 0, w, h)
         val output = IntArray(a.size)
         for (i in a.indices) {
-            val d = ((abs(Color.red(a[i]) - Color.red(b[i])) +
-                abs(Color.green(a[i]) - Color.green(b[i])) +
-                abs(Color.blue(a[i]) - Color.blue(b[i]))) * scale).toInt().coerceIn(0, 255)
-            output[i] = Color.rgb(d, d, d)
+            val r = (abs(Color.red(a[i]) - Color.red(b[i])) * scale).toInt().coerceIn(0, 255)
+            val g = (abs(Color.green(a[i]) - Color.green(b[i])) * scale).toInt().coerceIn(0, 255)
+            val bl = (abs(Color.blue(a[i]) - Color.blue(b[i])) * scale).toInt().coerceIn(0, 255)
+            output[i] = Color.rgb(r, g, bl)
         }
         val result = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         result.setPixels(output, 0, w, 0, 0, w, h)
@@ -80,46 +81,38 @@ object GeoHunterForensics {
             val c = pixels[i]
             (Color.red(c) * 299 + Color.green(c) * 587 + Color.blue(c) * 114) / 1000
         }
-        val stride = w + 1
-        val sum = DoubleArray((w + 1) * (h + 1))
-        val sumSq = DoubleArray((w + 1) * (h + 1))
-        for (y in 0 until h) {
-            var row = 0.0
-            var rowSq = 0.0
-            for (x in 0 until w) {
-                val v = lum[y * w + x].toDouble()
-                row += v
-                rowSq += v * v
-                val idx = (y + 1) * stride + x + 1
-                sum[idx] = sum[y * stride + x + 1] + row
-                sumSq[idx] = sumSq[y * stride + x + 1] + rowSq
-            }
-        }
+        val padW = w + 4
+        val padH = h + 4
+        val stride = padW + 1
+        val sum = DoubleArray((padW + 1) * (padH + 1))
+        val sumSq = DoubleArray(sum.size)
         fun reflect(p: Int, n: Int): Int {
             if (n <= 1) return 0
             var v = p
-            while (v < 0 || v >= n) {
-                v = if (v < 0) -v - 1 else 2 * n - v - 1
-            }
+            while (v < 0 || v >= n) v = if (v < 0) -v - 1 else 2 * n - v - 1
             return v
         }
-        val variance = IntArray(w * h)
-        var total = 0.0
-        for (y in 0 until h) {
-            val y0 = reflect(y - 2, h); val y1 = reflect(y + 2, h)
-            val top = min(y0, y1); val bottom = max(y0, y1)
-            for (x in 0 until w) {
-                val x0 = reflect(x - 2, w); val x1 = reflect(x + 2, w)
-                val left = min(x0, x1); val right = max(x0, x1)
-                val xA = left; val xB = right + 1
-                val yA = top; val yB = bottom + 1
-                val area = (xB - xA) * (yB - yA).toDouble()
-                val iA = yA * stride + xA; val iB = yA * stride + xB
-                val iC = yB * stride + xA; val iD = yB * stride + xB
-                val s = sum[iD] - sum[iB] - sum[iC] + sum[iA]
-                val q = sumSq[iD] - sumSq[iB] - sumSq[iC] + sumSq[iA]
-                variance[y * w + x] = (q / area - (s / area) * (s / area)).coerceIn(0.0, 255.0).toInt()
+        for (py in 0 until padH) {
+            var row = 0.0
+            var rowSq = 0.0
+            val sy = reflect(py - 2, h)
+            for (px in 0 until padW) {
+                val sx = reflect(px - 2, w)
+                val v = lum[sy * w + sx].toDouble()
+                row += v; rowSq += v * v
+                val idx = (py + 1) * stride + px + 1
+                sum[idx] = sum[py * stride + px + 1] + row
+                sumSq[idx] = sumSq[py * stride + px + 1] + rowSq
             }
+        }
+        val variance = IntArray(w * h)
+        for (y in 0 until h) for (x in 0 until w) {
+            val xA = x; val xB = x + 5; val yA = y; val yB = y + 5
+            val iA = yA * stride + xA; val iB = yA * stride + xB
+            val iC = yB * stride + xA; val iD = yB * stride + xB
+            val s = sum[iD] - sum[iB] - sum[iC] + sum[iA]
+            val q = sumSq[iD] - sumSq[iB] - sumSq[iC] + sumSq[iA]
+            variance[y * w + x] = (q / 25.0 - (s / 25.0) * (s / 25.0)).coerceIn(0.0, 255.0).toInt()
         }
         val mean = variance.average()
         val outPixels = IntArray(variance.size) { i ->
