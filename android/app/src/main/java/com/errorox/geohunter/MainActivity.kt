@@ -440,6 +440,8 @@ private fun GeoHunterApp() {
                     ToolStatus("Карта GPS-фотографии", if (metadata?.latitude != null && metadata?.longitude != null) "Координаты найдены" else "Ожидает GPS", metadata?.latitude != null && metadata?.longitude != null)
                     ToolStatus("Детекция лиц", if (sceneOutcome?.result != null) "Доступно" else if (selectedUri != null) "Анализ…" else "Ожидает фото", sceneOutcome?.result != null)
                     ToolStatus("Тени / Освещение", if (sceneOutcome?.result != null) "Доступно" else if (selectedUri != null) "Анализ…" else "Ожидает фото", sceneOutcome?.result != null)
+                    ToolStatus("Обратный поиск", if (selectedUri != null) "Можно отправить фото" else "Ожидает фото", selectedUri != null)
+                    ToolStatus("Веб-поиск по EXIF", if (selectedUri != null) "Доступно" else "Ожидает фото", selectedUri != null)
                 }
             }
 
