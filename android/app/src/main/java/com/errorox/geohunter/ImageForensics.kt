@@ -150,9 +150,11 @@ object ImageForensics {
         var bitIndex = 0
 
         for (pixel in pixels) {
-            val channels = intArrayOf((pixel shr 16) and 255, (pixel shr 8) and 255, pixel and 255)
-            for (channel in channels) {
-                val bit = channel and 1
+            val redBit = (pixel shr 16) and 1
+            val greenBit = (pixel shr 8) and 1
+            val blueBit = pixel and 1
+            val channelBits = intArrayOf(redBit, greenBit, blueBit)
+            for (bit in channelBits) {
                 if (bit == 1) ones++
                 val byteIndex = bitIndex / 8
                 bytes[byteIndex] = (bytes[byteIndex].toInt() or (bit shl (7 - bitIndex % 8))).toByte()
