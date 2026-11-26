@@ -55,3 +55,6 @@ The app requests INTERNET only for loading online map styles and tiles; it does 
 - Offline map support and local case/report storage.
 
 Advanced modules will be ported and validated individually against the existing GeoHunter implementation before being marked as available.
+
+
+When EXIF GPS coordinates are present, the app attempts reverse geocoding through Android's system Geocoder to display an approximate address. This may require network access and depends on the device's geocoding provider; the photo itself is not uploaded by this feature.
