@@ -427,7 +427,7 @@ private fun ExifLocationMap(latitude: Double, longitude: Double) {
                 Lifecycle.Event.ON_RESUME -> mapView.onResume()
                 Lifecycle.Event.ON_PAUSE -> mapView.onPause()
                 Lifecycle.Event.ON_STOP -> mapView.onStop()
-                Lifecycle.Event.ON_DESTROY -> mapView.onDestroy()
+                // onDestroy is called once from onDispose to avoid duplicate lifecycle teardown.
                 else -> Unit
             }
         }
