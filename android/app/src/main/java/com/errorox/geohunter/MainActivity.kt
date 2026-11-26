@@ -54,7 +54,7 @@ private val GhSurface = Color(0xFF111923)
 private val GhAccent = Color(0xFF00E5A0)
 private val GhMuted = Color(0xFF8B9AA9)
 
-data class ForensicOutcome(val result: ForensicResult?, val error: String? = null)
+data class ForensicOutcome(val result: ForensicResult?, val error: String? = null)\ndata class TextCodeOutcome(val result: TextCodeInspection?, val error: String? = null)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,6 +87,18 @@ private fun GeoHunterApp() {
                     ForensicOutcome(ImageForensics.analyze(context.contentResolver, uri, context.contentResolver.getType(uri)))
                 } catch (e: Exception) {
                     ForensicOutcome(null, e.localizedMessage ?: "Не удалось выполнить анализ")
+                }
+            }
+        }
+    }
+
+    val textCodeOutcome by produceState<TextCodeOutcome?>(initialValue = null, key1 = selectedUri) {
+        value = selectedUri?.let { uri ->
+            withContext(Dispatchers.IO) {
+                try {
+                    TextCodeOutcome(ImageTextCodeAnalyzer.analyze(context.contentResolver, uri))
+                } catch (e: Exception) {
+                    TextCodeOutcome(null, e.localizedMessage ?: "Не удалось выполнить OCR и поиск кодов")
                 }
             }
         }
@@ -257,12 +269,46 @@ private fun GeoHunterApp() {
                 }
             }
 
+            if (selectedUri != null) {
+                item {
+                    SectionCard(title = "OCR · QR · ШТРИХКОДЫ") {
+                        val scan = textCodeOutcome
+                        when {
+                            scan == null -> Text("Выполняется локальное распознавание текста и кодов…", color = GhMuted, fontSize = 12.sp)
+                            scan.error != null -> Text(scan.error, color = Color(0xFFFF7777), fontSize = 12.sp)
+                            scan.result != null -> {
+                                val result = scan.result
+                                InfoRow("Размер анализа", "${result.sampledWidth} × ${result.sampledHeight} px")
+                                Text("РАСПОЗНАННЫЙ ТЕКСТ", color = GhAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                if (result.recognizedText.isBlank()) {
+                                    Text("Текст на изображении не обнаружен.", color = GhMuted, fontSize = 12.sp)
+                                } else {
+                                    Text(result.recognizedText, color = Color(0xFFEAF0F6), fontSize = 12.sp)
+                                }
+                                Spacer(Modifier.height(12.dp))
+                                Text("НАЙДЕННЫЕ КОДЫ: ${result.codes.size}", color = GhAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                if (result.codes.isEmpty()) {
+                                    Text("QR-коды и поддерживаемые штрихкоды не обнаружены.", color = GhMuted, fontSize = 12.sp)
+                                } else {
+                                    result.codes.forEachIndexed { index, code ->
+                                        Text("${index + 1}. ${code.format}", color = GhAccent, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                        Text(code.value, color = Color(0xFFEAF0F6), fontSize = 12.sp)
+                                        Spacer(Modifier.height(6.dp))
+                                    }
+                                }
+                                Text("Распознавание выполняется локально встроенными моделями ML Kit. Результат OCR может содержать ошибки; содержимое QR-кодов и штрихкодов отображается как данные, а не открывается автоматически.", color = GhMuted, fontSize = 11.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
             item {
                 SectionCard(title = "ИНСТРУМЕНТЫ GEOHUNTER") {
                     ToolStatus("EXIF / GPS", "Доступно", true)
                     ToolStatus("ELA / Анализ шума", if (selectedUri != null && forensicOutcome?.result != null) "Доступно" else "Ожидает фото", selectedUri != null && forensicOutcome?.result != null)
                     ToolStatus("LSB / Стеганография", if (selectedUri != null && forensicOutcome?.result != null) "Доступно" else "Ожидает фото", selectedUri != null && forensicOutcome?.result != null)
-                    ToolStatus("OCR / QR / Штрихкоды", "Следующий этап разработки", false)
+                    ToolStatus("OCR / QR / Штрихкоды", if (textCodeOutcome?.result != null) "Доступно" else if (textCodeOutcome?.error != null) "Ошибка анализа" else if (selectedUri != null) "Анализ…" else "Ожидает фото", textCodeOutcome?.result != null)
                     ToolStatus("Тени / Положение солнца", "Следующий этап разработки", false)
                     ToolStatus("Детекция лиц", "Следующий этап разработки", false)
                 }
