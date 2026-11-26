@@ -10,9 +10,18 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
+data class LsbInspection(
+    val bitOnePercent: Double,
+    val byteEntropy: Double,
+    val extractedBytes: Int,
+    val detectedSignatures: List<String>,
+    val printableStrings: List<String>
+)
+
 data class ForensicResult(
     val elaBitmap: Bitmap?,
     val noiseBitmap: Bitmap,
+    val lsbInspection: LsbInspection,
     val elaMeanDifference: Double?,
     val noiseMeanResidual: Double,
     val sourceWidth: Int,
@@ -50,9 +59,11 @@ object ImageForensics {
 
         val ela = if (jpeg) createEla(original) else null
         val noise = createNoiseMap(original)
+        val lsb = inspectLsb(original)
         val result = ForensicResult(
             elaBitmap = ela?.first,
             noiseBitmap = noise.first,
+            lsbInspection = lsb,
             elaMeanDifference = ela?.second,
             noiseMeanResidual = noise.second,
             sourceWidth = bounds.outWidth,
@@ -123,6 +134,92 @@ object ImageForensics {
         val output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         output.setPixels(outputPixels, 0, width, 0, 0, width, height)
         return output to if (count == 0) 0.0 else total.toDouble() / count
+    }
+
+    /**
+     * Reads the least significant bit of each RGB channel in row-major order.
+     * This is a basic sequential LSB probe, not a universal steganography detector.
+     */
+    private fun inspectLsb(source: Bitmap): LsbInspection {
+        val pixels = IntArray(source.width * source.height)
+        source.getPixels(pixels, 0, source.width, 0, 0, source.width, source.height)
+
+        val bitCount = pixels.size * 3
+        val bytes = ByteArray(bitCount / 8)
+        var ones = 0
+        var bitIndex = 0
+
+        for (pixel in pixels) {
+            val channels = intArrayOf((pixel shr 16) and 255, (pixel shr 8) and 255, pixel and 255)
+            for (channel in channels) {
+                val bit = channel and 1
+                if (bit == 1) ones++
+                val byteIndex = bitIndex / 8
+                bytes[byteIndex] = (bytes[byteIndex].toInt() or (bit shl (7 - bitIndex % 8))).toByte()
+                bitIndex++
+            }
+        }
+
+        val frequencies = IntArray(256)
+        for (value in bytes) frequencies[value.toInt() and 255]++
+        var entropy = 0.0
+        if (bytes.isNotEmpty()) {
+            for (frequency in frequencies) {
+                if (frequency > 0) {
+                    val probability = frequency.toDouble() / bytes.size
+                    entropy -= probability * (kotlin.math.ln(probability) / kotlin.math.ln(2.0))
+                }
+            }
+        }
+
+        val signatures = mutableListOf<String>()
+        val signaturesToCheck = listOf(
+            byteArrayOf(0x50, 0x4B, 0x03, 0x04) to "ZIP",
+            byteArrayOf(0x25, 0x50, 0x44, 0x46) to "PDF",
+            byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47) to "PNG",
+            byteArrayOf(0x47, 0x49, 0x46, 0x38) to "GIF",
+            byteArrayOf(0x1F, 0x8B.toByte(), 0x08) to "GZIP",
+            byteArrayOf(0x52, 0x61, 0x72, 0x21) to "RAR",
+            byteArrayOf(0x37, 0x7A, 0xBC.toByte(), 0xAF.toByte()) to "7-Zip"
+        )
+        for ((signature, name) in signaturesToCheck) {
+            val limit = min(bytes.size - signature.size, 65536)
+            for (offset in 0..limit) {
+                var match = true
+                for (i in signature.indices) {
+                    if (bytes[offset + i] != signature[i]) {
+                        match = false
+                        break
+                    }
+                }
+                if (match) {
+                    signatures.add("$name: сигнатура найдена со смещением $offset байт")
+                    break
+                }
+            }
+        }
+
+        val strings = mutableListOf<String>()
+        val current = StringBuilder()
+        for (value in bytes.take(262144)) {
+            val ch = value.toInt() and 255
+            if (ch in 32..126 || ch in 192..255) {
+                current.append(ch.toChar())
+            } else {
+                if (current.length >= 6 && strings.size < 12) strings.add(current.toString())
+                current.setLength(0)
+            }
+            if (strings.size >= 12) break
+        }
+        if (current.length >= 6 && strings.size < 12) strings.add(current.toString())
+
+        return LsbInspection(
+            bitOnePercent = if (bitCount == 0) 0.0 else ones * 100.0 / bitCount,
+            byteEntropy = entropy,
+            extractedBytes = bytes.size,
+            detectedSignatures = signatures,
+            printableStrings = strings
+        )
     }
 
     private fun luminance(color: Int): Int =
