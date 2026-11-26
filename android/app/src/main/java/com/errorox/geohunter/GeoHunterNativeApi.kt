@@ -47,7 +47,7 @@ class GeoHunterNativeApi(
             val result = runCatching {
                 val bytes = android.util.Base64.decode(encoded, android.util.Base64.DEFAULT)
                 require(bytes.isNotEmpty() && bytes.size <= 50 * 1024 * 1024) { "Файл пуст или превышает 50 МБ." }
-                val safeName = fileName.substringAfterLast('/').substringAfterLast('\\\\')
+                val safeName = fileName.substringAfterLast('/').substringAfterLast('\\')
                     .replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "geohunter-export" }
                 val saved = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     val values = ContentValues().apply {
@@ -72,7 +72,9 @@ class GeoHunterNativeApi(
                 } else {
                     val dir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "GeoHunter")
                     dir.mkdirs()
-                    File(dir, safeName).writeBytes(bytes).absolutePath
+                    val outputFile = File(dir, safeName)
+                    outputFile.writeBytes(bytes)
+                    outputFile.absolutePath
                 }
                 JSONObject().put("success", true).put("saved", saved)
             }.getOrElse {
