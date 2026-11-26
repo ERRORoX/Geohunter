@@ -55,7 +55,7 @@ private val GhAccent = Color(0xFF00E5A0)
 private val GhMuted = Color(0xFF8B9AA9)
 
 data class ForensicOutcome(val result: ForensicResult?, val error: String? = null)
-data class TextCodeOutcome(val result: TextCodeInspection?, val error: String? = null)
+data class TextCodeOutcome(val result: TextCodeInspection?, val error: String? = null)\ndata class SceneOutcome(val result: ImageSceneInspection?, val error: String? = null)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,6 +100,18 @@ private fun GeoHunterApp() {
                     TextCodeOutcome(ImageTextCodeAnalyzer.analyze(context.contentResolver, uri))
                 } catch (e: Exception) {
                     TextCodeOutcome(null, e.localizedMessage ?: "Не удалось выполнить OCR и поиск кодов")
+                }
+            }
+        }
+    }
+
+    val sceneOutcome by produceState<SceneOutcome?>(initialValue = null, key1 = selectedUri) {
+        value = selectedUri?.let { uri ->
+            withContext(Dispatchers.IO) {
+                try {
+                    SceneOutcome(ImageSceneAnalyzer.analyze(context.contentResolver, uri))
+                } catch (e: Exception) {
+                    SceneOutcome(null, e.localizedMessage ?: "Не удалось выполнить анализ сцены")
                 }
             }
         }
@@ -298,6 +310,43 @@ private fun GeoHunterApp() {
                                     }
                                 }
                                 Text("Распознавание выполняется локально встроенной моделью ML Kit для латинского алфавита. Кириллица (русский текст) может распознаваться ненадёжно. Результат OCR может содержать ошибки; содержимое QR-кодов и штрихкодов отображается как данные, а не открывается автоматически.", color = GhMuted, fontSize = 11.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (selectedUri != null) {
+                item {
+                    SectionCard(title = "ЛИЦА · ТЕНИ · ОСВЕЩЕНИЕ") {
+                        val scene = sceneOutcome
+                        when {
+                            scene == null -> Text("Выполняется локальный анализ лиц и освещения…", color = GhMuted, fontSize = 12.sp)
+                            scene.error != null -> Text(scene.error, color = Color(0xFFFF7777), fontSize = 12.sp)
+                            scene.result != null -> {
+                                val result = scene.result
+                                InfoRow("Размер анализа", "${result.imageWidth} × ${result.imageHeight} px")
+                                Text("ДЕТЕКЦИЯ ЛИЦ: ${result.faces.size}", color = GhAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                if (result.faces.isEmpty()) {
+                                    Text("Лица не обнаружены.", color = GhMuted, fontSize = 12.sp)
+                                } else {
+                                    result.faces.forEachIndexed { index, face ->
+                                        Text("Лицо ${index + 1}", color = Color(0xFFEAF0F6), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                        InfoRow("Область (x, y)", "${face.left}, ${face.top}")
+                                        InfoRow("Размер области", "${face.width} × ${face.height} px")
+                                        face.smilingProbability?.let { InfoRow("Вероятность улыбки", "${(it * 100).roundToInt()}%") }
+                                        face.leftEyeOpenProbability?.let { InfoRow("Левый глаз открыт", "${(it * 100).roundToInt()}%") }
+                                        face.rightEyeOpenProbability?.let { InfoRow("Правый глаз открыт", "${(it * 100).roundToInt()}%") }
+                                    }
+                                }
+                                Spacer(Modifier.height(16.dp))
+                                Text("КАРТА ТЁМНЫХ ОБЛАСТЕЙ", color = GhAccent, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                ForensicImage(result.light.shadowMask, "Бинарная карта тёмных областей изображения")
+                                InfoRow("Тёмные пиксели", String.format(java.util.Locale.US, "%.1f%%", result.light.shadowAreaPercent))
+                                InfoRow("Светлые пиксели", String.format(java.util.Locale.US, "%.1f%%", result.light.brightAreaPercent))
+                                InfoRow("Контраст диапазона", String.format(java.util.Locale.US, "%.1f%%", result.light.contrastPercent))
+                                InfoRow("Вектор яркости на фото", result.light.imagePlaneLightAngleDegrees?.let { "$it° (от тёмной к светлой области)" } ?: "Недостаточно выраженных областей")
+                                Text("Это эвристическая карта яркости, а не распознавание настоящих теней. Направление указано только в плоскости изображения. Азимут солнца по одному фото достоверно определить нельзя без ориентации камеры, геометрии сцены и подтверждённых EXIF-данных.", color = GhMuted, fontSize = 11.sp)
                             }
                         }
                     }
