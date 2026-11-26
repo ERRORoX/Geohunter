@@ -166,13 +166,13 @@ private fun GeoHunterApp() {
     Surface(modifier = Modifier.fillMaxSize(), color = GhBackground) {
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             item {
                 Spacer(Modifier.height(22.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier.size(40.dp).background(Color(0x1F00FF88), RoundedCornerShape(8.dp)).then(Modifier),
+                        modifier = Modifier.size(40.dp).background(Color(0x1F00FF88), RoundedCornerShape(8.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text("G", color = GhAccent, fontWeight = FontWeight.Bold, fontSize = 22.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
@@ -547,7 +547,12 @@ private fun ImagePreview(uri: Uri) {
             }
         }
     }
-    Card(colors = CardDefaults.cardColors(containerColor = GhSurface), shape = RoundedCornerShape(18.dp)) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = GhSurface),
+        shape = RoundedCornerShape(10.dp),
+        border = BorderStroke(1.dp, GhBorder)
+    ) {
         Column(Modifier.fillMaxWidth().padding(10.dp)) {
             Text("ПРЕДПРОСМОТР", color = GhMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(10.dp))
@@ -581,7 +586,7 @@ private fun ForensicImage(bitmap: Bitmap, description: String) {
 @Composable
 private fun SectionCard(title: String, content: @Composable () -> Unit) {
     Card(colors = CardDefaults.cardColors(containerColor = GhSurface), shape = RoundedCornerShape(18.dp)) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(Modifier.fillMaxWidth().padding(12.dp)) {
             Text(title, color = GhAccent, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
             Spacer(Modifier.height(10.dp))
             content()
