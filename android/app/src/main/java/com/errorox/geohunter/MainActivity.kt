@@ -54,7 +54,8 @@ private val GhSurface = Color(0xFF111923)
 private val GhAccent = Color(0xFF00E5A0)
 private val GhMuted = Color(0xFF8B9AA9)
 
-data class ForensicOutcome(val result: ForensicResult?, val error: String? = null)\ndata class TextCodeOutcome(val result: TextCodeInspection?, val error: String? = null)
+data class ForensicOutcome(val result: ForensicResult?, val error: String? = null)
+data class TextCodeOutcome(val result: TextCodeInspection?, val error: String? = null)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
